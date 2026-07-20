@@ -1,0 +1,1 @@
+import{t as e}from"./api-client-BxU12_z7.js";var t={async login(t){return(await e.post(`/auth/login`,{...t,expiresInMins:120})).data},async getUserProfile(t){return(await e.get(`/users/${t}`)).data}};export{t};
