@@ -1,0 +1,110 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --color-ink-50: #f7f7f5;
+  --color-ink-100: #efefeb;
+  --color-ink-200: #dad9d2;
+  --color-ink-300: #b9b8ae;
+  --color-ink-400: #929186;
+  --color-ink-500: #747268;
+  --color-ink-600: #5d5b53;
+  --color-ink-700: #484740;
+  --color-ink-800: #31312d;
+  --color-ink-900: #20201d;
+  --color-ink-950: #11110f;
+  --color-moss-50: #f3f7f1;
+  --color-moss-100: #e4eee0;
+  --color-moss-200: #c9dec2;
+  --color-moss-300: #a3c797;
+  --color-moss-400: #79aa6c;
+  --color-moss-500: #5b8e4d;
+  --color-moss-600: #46713a;
+  --color-moss-700: #395a31;
+  --color-moss-800: #304929;
+  --color-moss-900: #283d24;
+  --color-sand: #f4f0e8;
+  --color-coral: #df765d;
+  --shadow-soft: 0 16px 50px -24px rgb(29 30 25 / 0.22);
+  --shadow-card: 0 18px 45px -28px rgb(29 30 25 / 0.3);
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in srgb, currentColor 13%, transparent);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100vh;
+    background: #f9f8f5;
+    color: #20201d;
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .dark body {
+    background: #11110f;
+    color: #efefeb;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    outline-color: #5b8e4d;
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: #c9dec2;
+    color: #20201d;
+  }
+}
+
+@layer utilities {
+  .page-shell {
+    width: min(100% - 2rem, 80rem);
+    margin-inline: auto;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .surface {
+    @apply border-black/5 bg-white dark:border-white/8 dark:bg-ink-900;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-2 focus-visible:outline-moss-500 focus-visible:outline-offset-3;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
