@@ -51,10 +51,6 @@ npm run build
 
 **Password:** `emilyspass`
 
-## Screenshots
-
-> Coming soon
-
 ## About
 
 This project was built as part of my frontend portfolio to showcase modern React development, state management, API integration, and responsive UI design.
