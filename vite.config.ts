@@ -5,14 +5,26 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
+
+  base: '/luma-storefront/',
+
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, './src'),
+    },
+  },
+
   server: { port: 5173 },
   preview: { port: 4173 },
+
   test: {
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/test/setup.ts',
     css: true,
-    coverage: { reporter: ['text', 'html'], include: ['src/**/*.{ts,tsx}'] },
+    coverage: {
+      reporter: ['text', 'html'],
+      include: ['src/**/*.{ts,tsx}'],
+    },
   },
 });
