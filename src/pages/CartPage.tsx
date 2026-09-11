@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { OrderSummary } from '@/features/cart/components/OrderSummary';
 import { useCartStore, type CartItem } from '@/features/cart/cart-store';
 import { calculatePriceSummary, type ShippingOption } from '@/utils/pricing';
@@ -93,10 +94,12 @@ export default function CartPage() {
                   to={`/products/${item.id}`}
                   className="focus-ring size-24 shrink-0 overflow-hidden rounded-2xl bg-ink-100 p-2 sm:size-32 dark:bg-ink-800"
                 >
-                  <img
-                    className="h-full w-full object-contain"
-                    src={item.thumbnail}
+                  <ProductImage
+                    className="h-full w-full"
+                    src={item.image ?? item.thumbnail}
+                    thumbnail={item.thumbnail}
                     alt={item.title}
+                    sizes="(min-width: 640px) 8rem, 6rem"
                   />
                 </Link>
                 <div className="flex min-w-0 flex-1 flex-col">

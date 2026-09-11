@@ -3,13 +3,14 @@ import { X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { StarRating } from '@/components/ui/StarRating';
 import { useCartStore } from '@/features/cart/cart-store';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { ProductPrice } from '@/features/products/components/ProductPrice';
 import { useProduct } from '@/features/products/product-queries';
-import { toProductSnapshot } from '@/types/product';
+import { getProductImage, toProductSnapshot } from '@/types/product';
 
 export function QuickViewModal() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -56,11 +57,14 @@ export function QuickViewModal() {
           </div>
         ) : product ? (
           <div className="grid md:grid-cols-2">
-            <div className="grid min-h-80 place-items-center bg-ink-100 p-8 dark:bg-ink-800">
-              <img
-                className="max-h-96 w-full object-contain"
-                src={product.thumbnail}
+            <div className="grid place-items-center bg-ink-100 p-8 dark:bg-ink-800">
+              <ProductImage
+                className="aspect-square w-full max-w-96"
+                src={getProductImage(product)}
+                thumbnail={product.thumbnail}
                 alt={product.title}
+                sizes="(min-width: 768px) 24rem, 90vw"
+                priority
               />
             </div>
             <div className="flex flex-col justify-center p-7 sm:p-10">

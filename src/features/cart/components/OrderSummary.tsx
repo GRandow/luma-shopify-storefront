@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ProductImage } from '@/components/ui/ProductImage';
 import type { CartItem } from '@/features/cart/cart-store';
 import type { PriceSummary } from '@/utils/pricing';
 import { formatCurrency } from '@/utils/format';
@@ -22,7 +23,12 @@ export function OrderSummary({ items, summary, checkoutLink = false }: OrderSumm
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3">
             <div className="relative size-14 shrink-0 rounded-xl bg-ink-100 p-1 dark:bg-ink-800">
-              <img className="h-full w-full object-contain" src={item.thumbnail} alt="" />
+              <ProductImage
+                className="h-full w-full"
+                src={item.image ?? item.thumbnail}
+                thumbnail={item.thumbnail}
+                sizes="3.5rem"
+              />
               <span className="absolute -top-1.5 -right-1.5 grid size-5 place-items-center rounded-full bg-ink-700 text-[0.65rem] font-bold text-white">
                 {item.quantity}
               </span>

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useAuthStore } from '@/features/auth/auth-store';
 import { useWishlistStore } from '@/features/wishlist/wishlist-store';
@@ -55,7 +56,14 @@ export default function ProfilePage() {
         <aside>
           <div className="surface rounded-3xl border p-3">
             <div className="flex items-center gap-3 p-3">
-              <img className="size-11 rounded-full bg-ink-100" src={user.image} alt="" />
+              <img
+                className="size-11 shrink-0 rounded-full bg-ink-100 object-cover"
+                src={user.image}
+                alt=""
+                width={128}
+                height={128}
+                decoding="async"
+              />
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
                   {user.firstName} {user.lastName}
@@ -176,11 +184,13 @@ export default function ProfilePage() {
                       </div>
                       <div className="mt-5 flex -space-x-2">
                         {order.items.slice(0, 5).map((item) => (
-                          <img
+                          <ProductImage
                             key={item.id}
-                            className="size-12 rounded-full border-2 border-white bg-ink-100 object-contain p-1 dark:border-ink-900"
-                            src={item.thumbnail}
+                            className="size-12 rounded-full border-2 border-white bg-ink-100 p-1 dark:border-ink-900"
+                            src={item.image ?? item.thumbnail}
+                            thumbnail={item.thumbnail}
                             alt={item.title}
+                            sizes="3rem"
                           />
                         ))}
                       </div>

@@ -70,11 +70,22 @@ export interface ProductSnapshot {
   title: string;
   price: number;
   discountPercentage: number;
+  /** 300×300 preview from the API. */
   thumbnail: string;
+  /**
+   * 1000×1000 primary photo. Optional because snapshots persisted before this
+   * field existed (cart, wishlist, recently viewed) only carry the thumbnail.
+   */
+  image?: string;
   category: string;
   rating: number;
   stock: number;
   brand?: string;
+}
+
+/** The full-resolution primary photo of a product, falling back to its thumbnail. */
+export function getProductImage(product: Pick<Product, 'images' | 'thumbnail'>): string {
+  return product.images[0] ?? product.thumbnail;
 }
 
 export function toProductSnapshot(product: Product): ProductSnapshot {
@@ -84,6 +95,7 @@ export function toProductSnapshot(product: Product): ProductSnapshot {
     price: product.price,
     discountPercentage: product.discountPercentage,
     thumbnail: product.thumbnail,
+    image: getProductImage(product),
     category: product.category,
     rating: product.rating,
     stock: product.stock,

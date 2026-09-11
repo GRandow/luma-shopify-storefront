@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Maximize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { cn } from '@/utils/cn';
 
 interface ImageGalleryProps {
@@ -25,19 +26,20 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
             onClick={() => setSelected(image)}
             aria-label={`View image ${index + 1} of ${images.length}`}
           >
-            <img className="h-full w-full object-contain" src={image} alt="" />
+            <ProductImage className="h-full w-full" src={image} />
           </button>
         ))}
       </div>
       <button
-        className="focus-ring group relative order-1 aspect-square overflow-hidden rounded-3xl bg-ink-100 p-8 sm:order-2 dark:bg-ink-800"
+        className="focus-ring group relative isolate order-1 aspect-square overflow-hidden rounded-3xl bg-ink-100 p-8 sm:order-2 dark:bg-ink-800"
         onClick={() => setZoomed(true)}
         aria-label={`Zoom image of ${title}`}
       >
-        <img
-          className="h-full w-full object-contain transition duration-500 group-hover:scale-105"
+        <ProductImage
+          className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-105"
           src={selected}
           alt={title}
+          priority
         />
         <span className="absolute right-4 bottom-4 grid size-10 place-items-center rounded-full bg-white/90 text-ink-900 shadow-sm">
           <Maximize2 className="size-4" />
@@ -59,7 +61,12 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
           >
             <X className="size-5" />
           </Button>
-          <img className="max-h-[88vh] max-w-[92vw] object-contain" src={selected} alt={title} />
+          <ProductImage
+            className="h-auto max-h-[88vh] w-auto max-w-[92vw]"
+            src={selected}
+            alt={title}
+            priority
+          />
         </div>
       ) : null}
     </div>

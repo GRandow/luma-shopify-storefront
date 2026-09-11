@@ -3,6 +3,7 @@ import { Eye, GitCompareArrows, Heart, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { StarRating } from '@/components/ui/StarRating';
 import { useCartStore } from '@/features/cart/cart-store';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
@@ -45,16 +46,14 @@ export const ProductCard = memo(function ProductCard({
 
   return (
     <article className="group relative min-w-0">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[1.4rem] bg-ink-100 dark:bg-ink-800">
+      <div className="relative isolate aspect-square overflow-hidden rounded-[1.4rem] bg-ink-100 dark:bg-ink-800">
         <Link to={`/products/${product.id}`} className="focus-ring block h-full rounded-[1.4rem]">
-          <img
-            src={product.thumbnail}
+          <ProductImage
+            src={product.image ?? product.thumbnail}
+            thumbnail={product.thumbnail}
             alt={product.title}
-            width="500"
-            height="625"
-            loading={priority ? 'eager' : 'lazy'}
-            fetchPriority={priority ? 'high' : 'auto'}
-            className="h-full w-full object-contain p-5 transition duration-500 group-hover:scale-105"
+            priority={priority}
+            className="h-full w-full p-4 transition-transform duration-500 ease-out group-hover:scale-105"
           />
         </Link>
         {product.discountPercentage >= 10 ? (

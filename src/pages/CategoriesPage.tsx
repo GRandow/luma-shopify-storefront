@@ -2,9 +2,11 @@ import { ArrowUpRight, Layers3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { useCategories, useProducts } from '@/features/products/product-queries';
+import { getProductImage } from '@/types/product';
 import { formatCategory } from '@/utils/format';
 
 export default function CategoriesPage() {
@@ -49,12 +51,12 @@ export default function CategoriesPage() {
                 productsQuery.data?.products.filter(
                   (product) => product.category === category.slug,
                 ) ?? [];
-              const image = products[0]?.thumbnail;
+              const cover = products[0];
               return (
                 <Link
                   key={category.slug}
                   to={`/products?category=${category.slug}`}
-                  className={`focus-ring group relative min-h-72 overflow-hidden rounded-[1.7rem] bg-ink-100 p-7 dark:bg-ink-800 ${index % 7 === 0 ? 'sm:col-span-2' : ''}`}
+                  className={`focus-ring group relative isolate min-h-72 overflow-hidden rounded-[1.7rem] bg-ink-100 p-7 dark:bg-ink-800 ${index % 7 === 0 ? 'sm:col-span-2' : ''}`}
                 >
                   <div className="relative z-10">
                     <p className="text-xs font-bold tracking-wider text-moss-700 uppercase dark:text-moss-300">
@@ -67,13 +69,17 @@ export default function CategoriesPage() {
                       {products.length} curated pieces
                     </p>
                   </div>
-                  {image ? (
-                    <img
-                      className="absolute right-[-5%] bottom-[-8%] h-[78%] w-[58%] object-contain transition duration-500 group-hover:scale-110 group-hover:rotate-2"
-                      src={image}
-                      alt=""
-                      loading="lazy"
-                    />
+                  {cover ? (
+                    // Fixed square frame anchored to the corner, so every tile
+                    // (including the double-width ones) places its photo the same way.
+                    <div className="pointer-events-none absolute right-6 bottom-6 aspect-square h-[66%] transition-transform duration-500 ease-out group-hover:scale-105 group-hover:rotate-2">
+                      <ProductImage
+                        className="h-full w-full"
+                        src={getProductImage(cover)}
+                        thumbnail={cover.thumbnail}
+                        sizes="12rem"
+                      />
+                    </div>
                   ) : null}
                   <span className="absolute right-5 top-5 grid size-10 place-items-center rounded-full bg-white/70 opacity-0 transition group-hover:opacity-100 dark:bg-white/10">
                     <ArrowUpRight className="size-5" />

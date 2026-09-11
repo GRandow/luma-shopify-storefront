@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, GitCompareArrows, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { formatCurrency, formatCategory } from '@/utils/format';
 
@@ -89,10 +90,11 @@ export function CompareTray() {
               key={item.id}
               className="flex items-center gap-2 rounded-full bg-white/8 py-1 pr-2 pl-1 text-xs"
             >
-              <img
-                className="size-7 rounded-full bg-white object-contain"
-                src={item.thumbnail}
-                alt=""
+              <ProductImage
+                className="size-7 rounded-full bg-white p-0.5"
+                src={item.image ?? item.thumbnail}
+                thumbnail={item.thumbnail}
+                sizes="1.75rem"
               />
               <span className="max-w-28 truncate">{item.title}</span>
               <button

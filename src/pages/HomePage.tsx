@@ -11,12 +11,14 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { ProductImage } from '@/components/ui/ProductImage';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { ProductGrid } from '@/features/products/components/ProductGrid';
 import { useCategories, useProducts } from '@/features/products/product-queries';
+import { getProductImage } from '@/types/product';
 
 const benefits: Array<{ icon: LucideIcon; title: string; detail: string }> = [
   { icon: PackageCheck, title: 'Free delivery', detail: 'Orders over $100' },
@@ -77,13 +79,14 @@ export default function HomePage() {
             </div>
           </div>
           {heroProduct ? (
-            <div className="pointer-events-none absolute right-[-8%] bottom-[-8%] hidden h-[90%] w-[58%] lg:block">
+            <div className="pointer-events-none absolute top-[7%] right-[4%] hidden aspect-square h-[86%] lg:block">
               <div className="absolute inset-12 rounded-full bg-white/40 blur-3xl" />
-              <img
-                className="relative h-full w-full rotate-[-5deg] object-contain drop-shadow-2xl"
-                src={heroProduct.thumbnail}
-                alt=""
-                fetchPriority="high"
+              <ProductImage
+                className="relative h-full w-full rotate-[-5deg] drop-shadow-2xl"
+                src={getProductImage(heroProduct)}
+                thumbnail={heroProduct.thumbnail}
+                sizes="(min-width: 1024px) 32rem, 1px"
+                priority
               />
             </div>
           ) : null}
@@ -136,22 +139,22 @@ export default function HomePage() {
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {popularCategories.map((category, index) => {
-              const image = productQuery.data?.products.find(
+              const cover = productQuery.data?.products.find(
                 (product) => product.category === category.slug,
-              )?.thumbnail;
+              );
               return (
                 <Link
                   key={category.slug}
                   to={`/products?category=${category.slug}`}
                   className="focus-ring group overflow-hidden rounded-3xl bg-white p-3 shadow-card transition hover:-translate-y-1 dark:bg-ink-800"
                 >
-                  <div className="aspect-square overflow-hidden rounded-2xl bg-ink-100 dark:bg-ink-700">
-                    {image ? (
-                      <img
-                        className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-110"
-                        src={image}
-                        alt=""
-                        loading="lazy"
+                  <div className="isolate aspect-square overflow-hidden rounded-2xl bg-ink-100 dark:bg-ink-700">
+                    {cover ? (
+                      <ProductImage
+                        className="h-full w-full p-3 transition-transform duration-500 ease-out group-hover:scale-110"
+                        src={getProductImage(cover)}
+                        thumbnail={cover.thumbnail}
+                        sizes="(min-width: 1024px) 13rem, (min-width: 640px) 33vw, 50vw"
                       />
                     ) : null}
                   </div>
