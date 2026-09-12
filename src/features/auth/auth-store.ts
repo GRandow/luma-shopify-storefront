@@ -13,6 +13,8 @@ interface AuthState {
   addAddress: (address: Address) => void;
 }
 
+type PersistedAuth = Pick<AuthState, 'user' | 'orders' | 'addresses' | 'isAuthenticated'>;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -32,13 +34,18 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'luma-session',
-      version: 1,
-      partialize: ({ user, orders, addresses, isAuthenticated }) => ({
+      version: 2,
+      partialize: ({ user, orders, addresses, isAuthenticated }): PersistedAuth => ({
         user,
         orders,
         addresses,
         isAuthenticated,
       }),
+      // Version 1 orders referenced DummyJSON products; keep the session, drop the orders.
+      migrate: (persisted, version): PersistedAuth => {
+        const state = persisted as PersistedAuth;
+        return version < 2 ? { ...state, orders: [] } : state;
+      },
     },
   ),
 );

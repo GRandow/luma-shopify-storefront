@@ -17,31 +17,44 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { ProductGrid } from '@/features/products/components/ProductGrid';
-import { useCategories, useProducts } from '@/features/products/product-queries';
-import { getProductImage } from '@/types/product';
+import { useCollections, useProducts } from '@/features/products/product-queries';
+import { getProductImage, type Collection, type Product } from '@/types/product';
 
 const benefits: Array<{ icon: LucideIcon; title: string; detail: string }> = [
   { icon: PackageCheck, title: 'Free delivery', detail: 'Orders over $100' },
   { icon: RotateCcw, title: 'Easy returns', detail: 'Within 30 days' },
-  { icon: ShieldCheck, title: 'Secure payment', detail: 'Protected checkout' },
+  { icon: ShieldCheck, title: 'Secure payment', detail: 'Shopify checkout' },
   { icon: Check, title: 'Curated quality', detail: 'Considered goods' },
 ];
 
-export default function HomePage() {
-  const productQuery = useProducts({ limit: 0 });
-  const categoriesQuery = useCategories();
-  const recentlyViewed = useDiscoveryStore((state) => state.recentlyViewed);
+/** A collection's own image, or the first product photo from it. */
+function getCollectionCover(collection: Collection, products: Product[]) {
+  if (collection.image) return collection.image;
+  const product = products.find((item) =>
+    item.collections.some((entry) => entry.handle === collection.handle),
+  );
+  return product ? getProductImage(product) : null;
+}
 
+export default function HomePage() {
+  const productsQuery = useProducts();
+  const collectionsQuery = useCollections();
+  const recentlyViewed = useDiscoveryStore((state) => state.recentlyViewed);
+  const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
+
+  // The catalog arrives in best-selling order, which is exactly the "featured" edit.
   const featured = useMemo(
-    () => [...(productQuery.data?.products ?? [])].sort((a, b) => b.rating - a.rating).slice(0, 8),
-    [productQuery.data],
+    () => products.filter((product) => product.availableForSale).slice(0, 8),
+    [products],
   );
   const newArrivals = useMemo(
-    () => [...(productQuery.data?.products ?? [])].sort((a, b) => b.id - a.id).slice(0, 8),
-    [productQuery.data],
+    () =>
+      [...products]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 8),
+    [products],
   );
-  const popularCategories = categoriesQuery.data?.slice(0, 6) ?? [];
-  const heroProduct = featured[0];
+  const popularCollections = collectionsQuery.data?.slice(0, 6) ?? [];
 
   function subscribe(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,59 +65,53 @@ export default function HomePage() {
   return (
     <>
       <section className="page-shell pt-4 sm:pt-7">
-        <div className="relative overflow-hidden rounded-[2rem] bg-[#dce9d7] px-6 py-14 sm:px-12 sm:py-20 lg:min-h-[38rem] lg:px-16 dark:bg-moss-900">
-          <div className="relative z-10 max-w-xl">
-            <Badge className="mb-6 bg-white/70" tone="success">
-              Spring collection · 2026
-            </Badge>
-            <h1 className="font-display text-balance text-5xl leading-[0.98] font-semibold tracking-[-0.06em] text-ink-950 sm:text-6xl lg:text-7xl dark:text-white">
-              Fewer things. Better chosen.
-            </h1>
-            <p className="mt-6 max-w-lg text-base leading-7 text-ink-700 sm:text-lg dark:text-moss-100">
+        <div className="flex flex-col justify-center overflow-hidden rounded-[2rem] bg-[#dce9d7] px-6 py-14 sm:px-12 sm:py-20 lg:min-h-[34rem] lg:px-16 dark:bg-moss-900">
+          <Badge className="w-fit bg-white/70" tone="success">
+            Autumn collection · 2026
+          </Badge>
+          <h1 className="font-display mt-6 text-balance text-5xl leading-[0.98] font-semibold tracking-[-0.06em] text-ink-950 sm:text-6xl dark:text-white">
+            Fewer things. Better chosen.
+          </h1>
+          <div className="mt-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-10">
+            <p className="max-w-xl text-base leading-7 text-ink-700 sm:text-lg dark:text-moss-100">
               Thoughtful essentials with lasting form, honest materials, and a quiet point of view.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            {/* Two equal columns, so the buttons always share one width. */}
+            <div className="grid shrink-0 gap-3 sm:grid-cols-2">
               <Link
                 to="/products"
-                className="focus-ring inline-flex h-13 items-center gap-2 rounded-full bg-ink-950 px-6 font-semibold text-white transition hover:bg-moss-700 dark:bg-white dark:text-ink-950"
+                className="focus-ring inline-flex h-13 items-center justify-center gap-2 rounded-full bg-ink-950 px-6 font-semibold whitespace-nowrap text-white transition hover:bg-moss-700 dark:bg-white dark:text-ink-950"
               >
                 Explore the collection <ArrowRight className="size-4" />
               </Link>
               <Link
-                to="/categories"
-                className="focus-ring inline-flex h-13 items-center rounded-full border border-ink-950/15 bg-white/25 px-6 font-semibold backdrop-blur transition hover:bg-white/50 dark:border-white/20"
+                to="/collections"
+                className="focus-ring inline-flex h-13 items-center justify-center rounded-full border border-ink-950/15 bg-white/25 px-6 font-semibold whitespace-nowrap backdrop-blur transition hover:bg-white/50 dark:border-white/20"
               >
-                Browse categories
+                Browse collections
               </Link>
             </div>
           </div>
-          {heroProduct ? (
-            <div className="pointer-events-none absolute top-[7%] right-[4%] hidden aspect-square h-[86%] lg:block">
-              <div className="absolute inset-12 rounded-full bg-white/40 blur-3xl" />
-              <ProductImage
-                className="relative h-full w-full rotate-[-5deg] drop-shadow-2xl"
-                src={getProductImage(heroProduct)}
-                thumbnail={heroProduct.thumbnail}
-                sizes="(min-width: 1024px) 32rem, 1px"
-                priority
-              />
-            </div>
-          ) : null}
-          <div className="absolute top-8 right-8 size-24 rounded-full border border-ink-950/10" />
-          <div className="absolute right-32 bottom-12 size-3 rounded-full bg-coral" />
         </div>
       </section>
 
+      {/* Four equal cards spanning the same width as the hero: one column on
+          phones, two on tablets, four on desktop. */}
       <section
-        className="page-shell grid grid-cols-2 gap-4 border-b border-black/5 py-8 sm:grid-cols-4 dark:border-white/8"
+        className="page-shell mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4"
         aria-label="Store benefits"
       >
         {benefits.map(({ icon: Icon, title, detail }) => (
-          <div key={title} className="flex items-center gap-3">
-            <Icon className="size-5 text-moss-700 dark:text-moss-300" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-semibold">{title}</p>
-              <p className="text-xs text-ink-400">{detail}</p>
+          <div
+            key={title}
+            className="flex items-center gap-4 rounded-2xl border border-ink-950/10 px-5 py-4 lg:gap-5 lg:px-6 lg:py-6 dark:border-white/12"
+          >
+            <span className="grid size-12 shrink-0 place-items-center rounded-full bg-moss-100 text-moss-800 lg:size-14 dark:bg-moss-900 dark:text-moss-200">
+              <Icon className="size-6 lg:size-7" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-base font-semibold lg:text-lg">{title}</p>
+              <p className="text-sm text-ink-500 dark:text-ink-400">{detail}</p>
             </div>
           </div>
         ))}
@@ -123,7 +130,7 @@ export default function HomePage() {
             </Link>
           }
         />
-        {productQuery.isLoading ? (
+        {productsQuery.isLoading ? (
           <ProductGridSkeleton />
         ) : (
           <ProductGrid products={featured} priorityCount={4} />
@@ -134,31 +141,27 @@ export default function HomePage() {
         <div className="page-shell">
           <SectionHeading
             eyebrow="Shop by room and ritual"
-            title="Popular categories"
+            title="Popular collections"
             description="A useful way into the collection, organized around the things you actually do."
           />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {popularCategories.map((category, index) => {
-              const cover = productQuery.data?.products.find(
-                (product) => product.category === category.slug,
-              );
+            {popularCollections.map((collection, index) => {
+              const cover = getCollectionCover(collection, products);
               return (
                 <Link
-                  key={category.slug}
-                  to={`/products?category=${category.slug}`}
+                  key={collection.handle}
+                  to={`/products?collection=${collection.handle}`}
                   className="focus-ring group overflow-hidden rounded-3xl bg-white p-3 shadow-card transition hover:-translate-y-1 dark:bg-ink-800"
                 >
                   <div className="isolate aspect-square overflow-hidden rounded-2xl bg-ink-100 dark:bg-ink-700">
-                    {cover ? (
-                      <ProductImage
-                        className="h-full w-full p-3 transition-transform duration-500 ease-out group-hover:scale-110"
-                        src={getProductImage(cover)}
-                        thumbnail={cover.thumbnail}
-                        sizes="(min-width: 1024px) 13rem, (min-width: 640px) 33vw, 50vw"
-                      />
-                    ) : null}
+                    <ProductImage
+                      className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-110"
+                      image={cover}
+                      alt=""
+                      sizes="(min-width: 1024px) 13rem, (min-width: 640px) 33vw, 50vw"
+                    />
                   </div>
-                  <p className="mt-3 truncate text-sm font-semibold">{category.name}</p>
+                  <p className="mt-3 truncate text-sm font-semibold">{collection.title}</p>
                   <p className="mt-0.5 text-xs text-ink-400">Collection {index + 1}</p>
                 </Link>
               );
@@ -173,7 +176,7 @@ export default function HomePage() {
           title="New arrivals"
           description="Fresh additions selected for usefulness, material honesty, and good company."
         />
-        {productQuery.isLoading ? <ProductGridSkeleton /> : <ProductGrid products={newArrivals} />}
+        {productsQuery.isLoading ? <ProductGridSkeleton /> : <ProductGrid products={newArrivals} />}
       </section>
 
       <section className="page-shell">
@@ -186,8 +189,8 @@ export default function HomePage() {
               Up to 20% off the edit.
             </h2>
             <p className="mt-4 leading-7 text-ink-300">
-              Use code <strong className="text-white">LUMA20</strong> on orders over $150. Ends when
-              the good pieces are gone.
+              Use code <strong className="text-white">LUMA20</strong> at checkout on orders over
+              $150. Ends when the good pieces are gone.
             </p>
             <Link
               className="focus-ring mt-7 inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-ink-950"
@@ -221,7 +224,7 @@ export default function HomePage() {
             Useful things, thoughtfully delivered.
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-ink-500 dark:text-ink-400">
-            New arrivals, design stories, and the occasional genuinely good offer. No inbox clutter.
+            New arrivals, design stories, and the occasional good offer. No inbox clutter.
           </p>
           <form
             className="mx-auto mt-7 flex max-w-lg flex-col gap-2 sm:flex-row"

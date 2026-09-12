@@ -1,4 +1,4 @@
-import type { ProductSnapshot } from '@/types/product';
+import type { Money, StorefrontImage } from '@/types/product';
 
 export interface Address {
   id: string;
@@ -51,7 +51,15 @@ export interface UserDetails {
   };
 }
 
-export interface OrderItem extends ProductSnapshot {
+/** A purchased cart line, frozen at order time. */
+export interface OrderItem {
+  id: string;
+  variantId: string;
+  handle: string;
+  title: string;
+  variantTitle: string | null;
+  image: StorefrontImage | null;
+  price: Money;
   quantity: number;
 }
 
@@ -60,6 +68,6 @@ export interface Order {
   createdAt: string;
   status: 'Processing' | 'Shipped' | 'Delivered';
   items: OrderItem[];
-  total: number;
+  total: Money;
   shippingAddress: Address;
 }

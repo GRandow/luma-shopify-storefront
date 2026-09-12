@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Footer } from '@/components/layout/Footer';
 import { Header } from '@/components/layout/Header';
 import { PageLoader } from '@/components/ui/PageLoader';
+import { CartDrawer } from '@/features/cart/components/CartDrawer';
 import { QuickViewModal } from '@/features/products/components/QuickViewModal';
 import { CompareTray } from '@/features/products/components/CompareTray';
 import { useScrollRestoration } from '@/hooks/use-scroll-restoration';
@@ -20,6 +21,7 @@ export function StorefrontLayout() {
       </main>
       <Footer />
       <QuickViewModal />
+      <CartDrawer />
       <CompareTray />
     </div>
   );

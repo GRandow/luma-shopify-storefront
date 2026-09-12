@@ -1,41 +1,30 @@
-export const TAX_RATE = 0.0825;
+import { getCartDiscount, type Cart } from '@/types/cart';
+import type { Money } from '@/types/product';
+
+/**
+ * Pricing for the demo checkout page. Line prices, discounts and the cart
+ * total come from Shopify; only the shipping estimate is local, because a
+ * real store computes shipping and taxes inside Shopify's checkout.
+ */
+
 export const FREE_SHIPPING_THRESHOLD = 100;
 
-export interface PriceableItem {
-  price: number;
-  quantity: number;
-}
-
-export interface PriceSummary {
-  subtotal: number;
-  discount: number;
-  shipping: number;
-  tax: number;
-  total: number;
-}
-
-export type ShippingOption = 'standard' | 'express' | 'pickup';
+export type ShippingOption = 'standard' | 'express';
 
 const shippingRates: Record<ShippingOption, number> = {
   standard: 8,
   express: 18,
-  pickup: 0,
 };
+
+export interface PriceSummary {
+  subtotal: Money;
+  discount: Money;
+  shipping: Money;
+  total: Money;
+}
 
 export function roundCurrency(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
-export function calculateSubtotal(items: PriceableItem[]): number {
-  return roundCurrency(items.reduce((total, item) => total + item.price * item.quantity, 0));
-}
-
-export function calculateDiscount(subtotal: number, promoCode: string | null): number {
-  if (promoCode?.toUpperCase() === 'WELCOME10') return roundCurrency(subtotal * 0.1);
-  if (promoCode?.toUpperCase() === 'LUMA20' && subtotal >= 150) {
-    return roundCurrency(subtotal * 0.2);
-  }
-  return 0;
 }
 
 export function calculateShipping(discountedSubtotal: number, option: ShippingOption): number {
@@ -44,16 +33,17 @@ export function calculateShipping(discountedSubtotal: number, option: ShippingOp
 }
 
 export function calculatePriceSummary(
-  items: PriceableItem[],
-  promoCode: string | null,
+  cart: Pick<Cart, 'cost'>,
   shippingOption: ShippingOption,
 ): PriceSummary {
-  const subtotal = calculateSubtotal(items);
-  const discount = calculateDiscount(subtotal, promoCode);
-  const discountedSubtotal = subtotal - discount;
-  const shipping = calculateShipping(discountedSubtotal, shippingOption);
-  const tax = roundCurrency(discountedSubtotal * TAX_RATE);
-  const total = roundCurrency(discountedSubtotal + shipping + tax);
+  const { currencyCode } = cart.cost.total;
+  const discount = getCartDiscount(cart);
+  const shipping = calculateShipping(cart.cost.total.amount, shippingOption);
 
-  return { subtotal, discount, shipping, tax, total };
+  return {
+    subtotal: cart.cost.subtotal,
+    discount,
+    shipping: { amount: shipping, currencyCode },
+    total: { amount: roundCurrency(cart.cost.total.amount + shipping), currencyCode },
+  };
 }

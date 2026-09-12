@@ -1,32 +1,43 @@
 import { useQuery } from '@tanstack/react-query';
-import { productService, type ProductRequest } from '@/services/product-service';
+import { productService, type ProductListRequest } from '@/services/product-service';
 
 export const productKeys = {
   all: ['products'] as const,
-  list: (request: ProductRequest) => [...productKeys.all, 'list', request] as const,
-  detail: (id: number) => [...productKeys.all, 'detail', id] as const,
-  categories: ['product-categories'] as const,
+  list: (request: ProductListRequest) => [...productKeys.all, 'list', request] as const,
+  detail: (handle: string) => [...productKeys.all, 'detail', handle] as const,
+  recommendations: (productId: string) =>
+    [...productKeys.all, 'recommendations', productId] as const,
+  collections: ['collections'] as const,
 };
 
-export function useProducts(request: ProductRequest = {}) {
+export function useProducts(request: ProductListRequest = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: productKeys.list(request),
-    queryFn: () => productService.list(request),
+    queryFn: ({ signal }) => productService.list(request, signal),
+    enabled: options.enabled ?? true,
   });
 }
 
-export function useProduct(id: number | null) {
+export function useProduct(handle: string | null) {
   return useQuery({
-    queryKey: productKeys.detail(id ?? 0),
-    queryFn: () => productService.getById(id ?? 0),
-    enabled: id !== null && id > 0,
+    queryKey: productKeys.detail(handle ?? ''),
+    queryFn: ({ signal }) => productService.getByHandle(handle ?? '', signal),
+    enabled: handle !== null && handle.length > 0,
   });
 }
 
-export function useCategories() {
+export function useCollections() {
   return useQuery({
-    queryKey: productKeys.categories,
-    queryFn: () => productService.categories(),
+    queryKey: productKeys.collections,
+    queryFn: ({ signal }) => productService.collections(signal),
     staleTime: 1000 * 60 * 60,
+  });
+}
+
+export function useProductRecommendations(productId: string | null) {
+  return useQuery({
+    queryKey: productKeys.recommendations(productId ?? ''),
+    queryFn: ({ signal }) => productService.recommendations(productId ?? '', signal),
+    enabled: productId !== null,
   });
 }

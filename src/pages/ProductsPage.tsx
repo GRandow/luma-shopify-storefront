@@ -12,7 +12,7 @@ import {
   filterProducts,
   getCatalogPriceCeiling,
 } from '@/features/products/filter-products';
-import { useCategories, useProducts } from '@/features/products/product-queries';
+import { useCollections, useProducts } from '@/features/products/product-queries';
 import type { ProductFiltersState, ProductSort } from '@/types/product';
 
 const PAGE_SIZE = 12;
@@ -25,21 +25,23 @@ export default function ProductsPage() {
   const [mobileFilters, setMobileFilters] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const initialQuery = searchParams.get('q') ?? '';
-  const initialCategory = searchParams.get('category') ?? '';
+  const initialCollection = searchParams.get('collection') ?? '';
   const [filters, setFilters] = useState<ProductFiltersState>({
     ...DEFAULT_FILTERS,
     query: initialQuery,
-    category: initialCategory,
+    collection: initialCollection,
     sort: (searchParams.get('sort') as ProductSort | null) ?? DEFAULT_FILTERS.sort,
   });
+  // Search goes through Shopify's `search` query; a collection loads through
+  // `collection(handle:)`. Everything else (price, stock, sort) is refined locally.
   const productsQuery = useProducts({
-    limit: 0,
     search: initialQuery || undefined,
-    category: initialQuery ? undefined : initialCategory || undefined,
+    collection: initialQuery ? undefined : initialCollection || undefined,
   });
-  const categoriesQuery = useCategories();
-  const products = useMemo(() => productsQuery.data?.products ?? [], [productsQuery.data]);
+  const collectionsQuery = useCollections();
+  const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
   const priceCeiling = getCatalogPriceCeiling(products);
+  const currencyCode = products[0]?.price.currencyCode ?? 'USD';
   const filtered = useMemo(() => filterProducts(products, filters), [filters, products]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const shownProducts =
@@ -50,10 +52,10 @@ export default function ProductsPage() {
   useEffect(() => {
     const next = new URLSearchParams();
     if (filters.query) next.set('q', filters.query);
-    if (filters.category) next.set('category', filters.category);
+    if (filters.collection) next.set('collection', filters.collection);
     if (filters.sort !== DEFAULT_FILTERS.sort) next.set('sort', filters.sort);
     setSearchParams(next, { replace: true });
-  }, [filters.query, filters.category, filters.sort, setSearchParams]);
+  }, [filters.query, filters.collection, filters.sort, setSearchParams]);
 
   const handleFiltersChange = useCallback((nextFilters: ProductFiltersState) => {
     setPage(1);
@@ -80,12 +82,23 @@ export default function ProductsPage() {
     return () => observer.disconnect();
   }, [filtered.length, mode]);
 
+  const filterPanel = (
+    <ProductFilters
+      filters={filters}
+      collections={collectionsQuery.data ?? []}
+      priceCeiling={priceCeiling}
+      currencyCode={currencyCode}
+      onChange={handleFiltersChange}
+      onReset={resetFilters}
+    />
+  );
+
   return (
     <>
       <PageHeader
         eyebrow="The full collection"
         title="Find your next everyday favorite"
-        description="Filter the edit by category, price, rating, or whatever you have in mind."
+        description="Filter the edit by collection, price, availability, or whatever you have in mind."
       />
       <div className="page-shell py-10 sm:py-14">
         <div className="mb-7 flex items-center justify-between gap-3">
@@ -123,15 +136,7 @@ export default function ProductsPage() {
           </div>
         </div>
         <div className="grid gap-10 lg:grid-cols-[15rem_1fr]">
-          <div className="hidden lg:block">
-            <ProductFilters
-              filters={filters}
-              categories={categoriesQuery.data ?? []}
-              priceCeiling={priceCeiling}
-              onChange={handleFiltersChange}
-              onReset={resetFilters}
-            />
-          </div>
+          <div className="hidden lg:block">{filterPanel}</div>
           <div>
             {productsQuery.isLoading ? (
               <ProductGridSkeleton count={12} />
@@ -146,7 +151,7 @@ export default function ProductsPage() {
               <EmptyState
                 icon={ListFilter}
                 title="No products match"
-                description="Try widening your price or rating filters, or search for something else."
+                description="Try widening your price filter, or search for something else."
                 action={<Button onClick={resetFilters}>Reset filters</Button>}
               />
             ) : (
@@ -221,13 +226,7 @@ export default function ProductsPage() {
                 <X className="size-5" />
               </Button>
             </div>
-            <ProductFilters
-              filters={filters}
-              categories={categoriesQuery.data ?? []}
-              priceCeiling={priceCeiling}
-              onChange={handleFiltersChange}
-              onReset={resetFilters}
-            />
+            {filterPanel}
             <Button className="mt-8 w-full" onClick={() => setMobileFilters(false)}>
               Show {filtered.length} products
             </Button>

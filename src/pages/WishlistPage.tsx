@@ -4,18 +4,32 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { useCartStore } from '@/features/cart/cart-store';
+import { useCartDrawer } from '@/features/cart/cart-drawer-store';
+import { useAddToCart } from '@/features/cart/cart-queries';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useWishlistStore } from '@/features/wishlist/wishlist-store';
 
 export default function WishlistPage() {
   const items = useWishlistStore((state) => state.items);
   const clear = useWishlistStore((state) => state.clear);
-  const addItem = useCartStore((state) => state.addItem);
+  const addToCart = useAddToCart();
+  const openCartDrawer = useCartDrawer((state) => state.open);
 
   function addAll() {
-    items.forEach((item) => addItem(item));
-    toast.success(`${items.length} item${items.length === 1 ? '' : 's'} added to your bag`);
+    // Adds each product's default variant; sizes and colours can be adjusted in the bag.
+    const lines = items.flatMap((item) =>
+      item.availableForSale && item.defaultVariantId
+        ? [{ merchandiseId: item.defaultVariantId, quantity: 1 }]
+        : [],
+    );
+    if (lines.length === 0) {
+      toast.error('None of the saved pieces are available right now.');
+      return;
+    }
+    addToCart.mutate(lines, {
+      onSuccess: openCartDrawer,
+      onError: (error) => toast.error(error.message),
+    });
   }
 
   return (
@@ -46,7 +60,11 @@ export default function WishlistPage() {
               <Button variant="ghost" onClick={clear}>
                 Clear wishlist
               </Button>
-              <Button icon={<ShoppingBag className="size-4" />} onClick={addAll}>
+              <Button
+                icon={<ShoppingBag className="size-4" />}
+                loading={addToCart.isPending}
+                onClick={addAll}
+              >
                 Add all to bag
               </Button>
             </div>

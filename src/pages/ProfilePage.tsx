@@ -11,7 +11,7 @@ import { ProductCard } from '@/features/products/components/ProductCard';
 import { useAuthStore } from '@/features/auth/auth-store';
 import { useWishlistStore } from '@/features/wishlist/wishlist-store';
 import { authService } from '@/services/auth-service';
-import { formatCurrency, formatDate } from '@/utils/format';
+import { formatDate, formatMoney } from '@/utils/format';
 
 type ProfileTab = 'overview' | 'orders' | 'addresses' | 'wishlist';
 
@@ -179,16 +179,15 @@ export default function ProfilePage() {
                           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">
                             {order.status}
                           </span>
-                          <p className="mt-2 font-semibold">{formatCurrency(order.total)}</p>
+                          <p className="mt-2 font-semibold">{formatMoney(order.total)}</p>
                         </div>
                       </div>
                       <div className="mt-5 flex -space-x-2">
                         {order.items.slice(0, 5).map((item) => (
                           <ProductImage
                             key={item.id}
-                            className="size-12 rounded-full border-2 border-white bg-ink-100 p-1 dark:border-ink-900"
-                            src={item.image ?? item.thumbnail}
-                            thumbnail={item.thumbnail}
+                            className="size-12 rounded-full border-2 border-white bg-ink-100 dark:border-ink-900"
+                            image={item.image}
                             alt={item.title}
                             sizes="3rem"
                           />

@@ -1,47 +1,71 @@
-import { MemoryRouter } from 'react-router-dom';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { useCartStore } from '@/features/cart/cart-store';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useCartDrawer } from '@/features/cart/cart-drawer-store';
+import { useCartSession } from '@/features/cart/cart-store';
+import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { useWishlistStore } from '@/features/wishlist/wishlist-store';
-import { productFixture } from '@/test/fixtures';
+import { storefrontRequest } from '@/services/storefront/client';
+import { productFixture, rawCartFixture, simpleProductFixture } from '@/test/fixtures';
+import { renderWithProviders } from '@/test/render';
 import { toProductSnapshot } from '@/types/product';
 
-const product = toProductSnapshot(productFixture);
+vi.mock('@/services/storefront/client', () => ({
+  storefrontRequest: vi.fn(),
+  isMockShop: () => true,
+}));
+
+const simpleProduct = toProductSnapshot(simpleProductFixture);
+const productWithOptions = toProductSnapshot(productFixture);
 
 describe('ProductCard', () => {
   beforeEach(() => {
-    useCartStore.setState({ items: [] });
+    vi.mocked(storefrontRequest).mockReset();
+    useCartSession.setState({ cartId: null });
+    useCartDrawer.setState({ isOpen: false });
     useWishlistStore.setState({ items: [] });
+    useDiscoveryStore.setState({ quickViewHandle: null, compareItems: [] });
   });
 
   it('renders accessible product information and destination', () => {
-    render(
-      <MemoryRouter>
-        <ProductCard product={product} />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<ProductCard product={simpleProduct} />);
 
-    expect(screen.getByRole('heading', { name: product.title })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: product.title })).toHaveAttribute('loading', 'lazy');
-    expect(screen.getAllByRole('link', { name: product.title })).toHaveLength(2);
-    expect(screen.getAllByRole('link', { name: product.title })[0]).toHaveAttribute(
+    expect(screen.getByRole('heading', { name: simpleProduct.title })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: simpleProduct.title })).toHaveAttribute(
+      'loading',
+      'lazy',
+    );
+    expect(screen.getAllByRole('link', { name: simpleProduct.title })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: simpleProduct.title })[0]).toHaveAttribute(
       'href',
-      `/products/${product.id}`,
+      `/products/${simpleProduct.handle}`,
     );
   });
 
-  it('adds the product to cart and toggles wishlist', () => {
-    render(
-      <MemoryRouter>
-        <ProductCard product={product} />
-      </MemoryRouter>,
-    );
+  it('creates a Shopify cart with the default variant, opens the bag and toggles the wishlist', async () => {
+    vi.mocked(storefrontRequest).mockResolvedValueOnce({
+      cartCreate: { cart: rawCartFixture, userErrors: [] },
+    });
+    renderWithProviders(<ProductCard product={simpleProduct} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add to wishlist' }));
 
-    expect(useCartStore.getState().items[0]).toMatchObject({ id: product.id, quantity: 1 });
-    expect(useWishlistStore.getState().items[0]?.id).toBe(product.id);
+    await waitFor(() => expect(useCartSession.getState().cartId).toBe(rawCartFixture.id));
+    expect(vi.mocked(storefrontRequest)).toHaveBeenCalledWith(
+      expect.stringContaining('mutation CartCreate'),
+      { lines: [{ merchandiseId: simpleProduct.defaultVariantId, quantity: 1 }] },
+    );
+    await waitFor(() => expect(useCartDrawer.getState().isOpen).toBe(true));
+    expect(useWishlistStore.getState().items[0]?.id).toBe(simpleProduct.id);
+  });
+
+  it('opens quick view instead of guessing a variant for products with options', () => {
+    renderWithProviders(<ProductCard product={productWithOptions} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(useDiscoveryStore.getState().quickViewHandle).toBe(productWithOptions.handle);
+    expect(vi.mocked(storefrontRequest)).not.toHaveBeenCalled();
   });
 });

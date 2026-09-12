@@ -6,6 +6,7 @@ import { StorefrontLayout } from '@/layouts/StorefrontLayout';
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const ProductsPage = lazy(() => import('@/pages/ProductsPage'));
 const ProductDetailsPage = lazy(() => import('@/pages/ProductDetailsPage'));
+const CollectionsPage = lazy(() => import('@/pages/CollectionsPage'));
 const CategoriesPage = lazy(() => import('@/pages/CategoriesPage'));
 const CartPage = lazy(() => import('@/pages/CartPage'));
 const WishlistPage = lazy(() => import('@/pages/WishlistPage'));
@@ -21,7 +22,8 @@ export const router = createHashRouter([
     children: [
       { index: true, element: <HomePage /> },
       { path: 'products', element: <ProductsPage /> },
-      { path: 'products/:productId', element: <ProductDetailsPage /> },
+      { path: 'products/:handle', element: <ProductDetailsPage /> },
+      { path: 'collections', element: <CollectionsPage /> },
       { path: 'categories', element: <CategoriesPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'wishlist', element: <WishlistPage /> },

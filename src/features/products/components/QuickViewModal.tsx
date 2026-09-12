@@ -5,26 +5,106 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/ui/ProductImage';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { StarRating } from '@/components/ui/StarRating';
-import { useCartStore } from '@/features/cart/cart-store';
+import { useCartDrawer } from '@/features/cart/cart-drawer-store';
+import { useAddToCart } from '@/features/cart/cart-queries';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { ProductPrice } from '@/features/products/components/ProductPrice';
+import { VariantSelector } from '@/features/products/components/VariantSelector';
 import { useProduct } from '@/features/products/product-queries';
-import { getProductImage, toProductSnapshot } from '@/types/product';
+import { useVariantSelection } from '@/features/products/use-variant-selection';
+import { getProductImage, type Product } from '@/types/product';
+
+interface QuickViewContentProps {
+  product: Product;
+  onClose: () => void;
+}
+
+function QuickViewContent({ product, onClose }: QuickViewContentProps) {
+  const addToCart = useAddToCart();
+  const openCartDrawer = useCartDrawer((state) => state.open);
+  const { selectedOptions, selectedVariant, select } = useVariantSelection(product);
+  const image = selectedVariant?.image ?? getProductImage(product);
+  const canAdd = selectedVariant !== undefined && selectedVariant.availableForSale;
+
+  function addToBag() {
+    if (!selectedVariant) return;
+    addToCart.mutate([{ merchandiseId: selectedVariant.id, quantity: 1 }], {
+      onSuccess: () => {
+        onClose();
+        openCartDrawer();
+      },
+      onError: (error) => toast.error(error.message),
+    });
+  }
+
+  return (
+    <div className="grid md:grid-cols-2">
+      <div className="grid place-items-center bg-ink-100 dark:bg-ink-800">
+        <ProductImage
+          className="aspect-square w-full"
+          image={image}
+          alt={product.title}
+          sizes="(min-width: 768px) 28rem, 90vw"
+          priority
+        />
+      </div>
+      <div className="flex flex-col justify-center p-7 sm:p-10">
+        <p className="text-xs font-bold tracking-wider text-moss-700 uppercase dark:text-moss-300">
+          {product.vendor}
+        </p>
+        <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight">{product.title}</h2>
+        <p className="mt-4 line-clamp-3 leading-7 text-ink-500 dark:text-ink-400">
+          {product.description}
+        </p>
+        <div className="mt-5">
+          <ProductPrice
+            price={selectedVariant?.price ?? product.price}
+            compareAtPrice={selectedVariant?.compareAtPrice ?? product.compareAtPrice}
+            size="lg"
+          />
+        </div>
+        <div className="mt-6">
+          <VariantSelector
+            product={product}
+            selectedOptions={selectedOptions}
+            onSelect={select}
+            size="sm"
+          />
+        </div>
+        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <Button
+            className="flex-1"
+            loading={addToCart.isPending}
+            disabled={!canAdd}
+            onClick={addToBag}
+          >
+            {canAdd ? 'Add to bag' : 'Sold out'}
+          </Button>
+          <Link
+            onClick={onClose}
+            className="focus-ring inline-flex h-11 items-center justify-center rounded-full border border-ink-200 px-5 text-sm font-semibold dark:border-white/15"
+            to={`/products/${product.handle}`}
+          >
+            Full details
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function QuickViewModal() {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const productId = useDiscoveryStore((state) => state.quickViewProductId);
+  const handle = useDiscoveryStore((state) => state.quickViewHandle);
   const close = useDiscoveryStore((state) => state.closeQuickView);
-  const addItem = useCartStore((state) => state.addItem);
-  const productQuery = useProduct(productId);
+  const productQuery = useProduct(handle);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    if (productId !== null && !dialog.open) dialog.showModal();
-    if (productId === null && dialog.open) dialog.close();
-  }, [productId]);
+    if (handle !== null && !dialog.open) dialog.showModal();
+    if (handle === null && dialog.open) dialog.close();
+  }, [handle]);
 
   const product = productQuery.data;
 
@@ -56,57 +136,7 @@ export function QuickViewModal() {
             </div>
           </div>
         ) : product ? (
-          <div className="grid md:grid-cols-2">
-            <div className="grid place-items-center bg-ink-100 p-8 dark:bg-ink-800">
-              <ProductImage
-                className="aspect-square w-full max-w-96"
-                src={getProductImage(product)}
-                thumbnail={product.thumbnail}
-                alt={product.title}
-                sizes="(min-width: 768px) 24rem, 90vw"
-                priority
-              />
-            </div>
-            <div className="flex flex-col justify-center p-7 sm:p-10">
-              <p className="text-xs font-bold tracking-wider text-moss-700 uppercase dark:text-moss-300">
-                {product.brand ?? product.category}
-              </p>
-              <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight">
-                {product.title}
-              </h2>
-              <div className="mt-3">
-                <StarRating rating={product.rating} count={product.reviews.length} />
-              </div>
-              <p className="mt-5 line-clamp-3 leading-7 text-ink-500 dark:text-ink-400">
-                {product.description}
-              </p>
-              <div className="mt-6">
-                <ProductPrice
-                  price={product.price}
-                  discountPercentage={product.discountPercentage}
-                  size="lg"
-                />
-              </div>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                <Button
-                  className="flex-1"
-                  onClick={() => {
-                    addItem(toProductSnapshot(product));
-                    toast.success('Added to your bag');
-                  }}
-                >
-                  Add to bag
-                </Button>
-                <Link
-                  onClick={close}
-                  className="focus-ring inline-flex h-11 items-center justify-center rounded-full border border-ink-200 px-5 text-sm font-semibold dark:border-white/15"
-                  to={`/products/${product.id}`}
-                >
-                  Full details
-                </Link>
-              </div>
-            </div>
-          </div>
+          <QuickViewContent key={product.handle} product={product} onClose={close} />
         ) : (
           <p className="p-12 text-center">This product could not be loaded.</p>
         )}

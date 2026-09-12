@@ -5,9 +5,13 @@ import type { ProductSnapshot } from '@/types/product';
 interface WishlistState {
   items: ProductSnapshot[];
   toggle: (product: ProductSnapshot) => void;
-  remove: (productId: number) => void;
-  has: (productId: number) => boolean;
+  remove: (productId: string) => void;
+  has: (productId: string) => boolean;
   clear: () => void;
+}
+
+interface PersistedWishlist {
+  items: ProductSnapshot[];
 }
 
 export const useWishlistStore = create<WishlistState>()(
@@ -25,6 +29,13 @@ export const useWishlistStore = create<WishlistState>()(
       has: (productId) => get().items.some((item) => item.id === productId),
       clear: () => set({ items: [] }),
     }),
-    { name: 'luma-wishlist', version: 1 },
+    {
+      name: 'luma-wishlist',
+      version: 2,
+      partialize: ({ items }): PersistedWishlist => ({ items }),
+      // Version 1 held DummyJSON products, which no longer exist in the catalog.
+      migrate: (persisted, version): PersistedWishlist =>
+        version < 2 ? { items: [] } : (persisted as PersistedWishlist),
+    },
   ),
 );

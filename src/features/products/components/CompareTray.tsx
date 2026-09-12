@@ -3,7 +3,7 @@ import { ChevronDown, GitCompareArrows, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/ui/ProductImage';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
-import { formatCurrency, formatCategory } from '@/utils/format';
+import { formatHandle, formatMoney } from '@/utils/format';
 
 export function CompareTray() {
   const [expanded, setExpanded] = useState(false);
@@ -46,31 +46,32 @@ export function CompareTray() {
                   <th className="py-3 text-ink-400">Price</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
-                      {formatCurrency(item.price)}
+                      {item.priceVaries ? 'From ' : ''}
+                      {formatMoney(item.price)}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <th className="py-3 text-ink-400">Rating</th>
+                  <th className="py-3 text-ink-400">Availability</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
-                      {item.rating.toFixed(1)} / 5
+                      {item.availableForSale ? 'In stock' : 'Sold out'}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <th className="py-3 text-ink-400">Stock</th>
+                  <th className="py-3 text-ink-400">Brand</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
-                      {item.stock} units
+                      {item.vendor || '—'}
                     </td>
                   ))}
                 </tr>
                 <tr>
-                  <th className="py-3 text-ink-400">Category</th>
+                  <th className="py-3 text-ink-400">Collection</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
-                      {formatCategory(item.category)}
+                      {item.collection ? formatHandle(item.collection) : '—'}
                     </td>
                   ))}
                 </tr>
@@ -91,9 +92,9 @@ export function CompareTray() {
               className="flex items-center gap-2 rounded-full bg-white/8 py-1 pr-2 pl-1 text-xs"
             >
               <ProductImage
-                className="size-7 rounded-full bg-white p-0.5"
-                src={item.image ?? item.thumbnail}
-                thumbnail={item.thumbnail}
+                className="size-7 rounded-full bg-white"
+                image={item.image}
+                alt=""
                 sizes="1.75rem"
               />
               <span className="max-w-28 truncate">{item.title}</span>

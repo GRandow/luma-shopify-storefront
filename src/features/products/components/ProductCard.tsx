@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/ui/ProductImage';
-import { StarRating } from '@/components/ui/StarRating';
-import { useCartStore } from '@/features/cart/cart-store';
+import { useCartDrawer } from '@/features/cart/cart-drawer-store';
+import { useAddToCart } from '@/features/cart/cart-queries';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { ProductPrice } from '@/features/products/components/ProductPrice';
 import { useWishlistStore } from '@/features/wishlist/wishlist-store';
-import type { ProductSnapshot } from '@/types/product';
+import { getDiscountPercentage, type ProductSnapshot } from '@/types/product';
 import { cn } from '@/utils/cn';
-import { formatCategory } from '@/utils/format';
+import { formatHandle } from '@/utils/format';
 
 interface ProductCardProps {
   product: ProductSnapshot;
@@ -22,7 +22,8 @@ export const ProductCard = memo(function ProductCard({
   product,
   priority = false,
 }: ProductCardProps) {
-  const addItem = useCartStore((state) => state.addItem);
+  const addToCart = useAddToCart();
+  const openCartDrawer = useCartDrawer((state) => state.open);
   const toggleWishlist = useWishlistStore((state) => state.toggle);
   const isWishlisted = useWishlistStore((state) =>
     state.items.some((item) => item.id === product.id),
@@ -31,11 +32,18 @@ export const ProductCard = memo(function ProductCard({
   const compareItems = useDiscoveryStore((state) => state.compareItems);
   const toggleCompare = useDiscoveryStore((state) => state.toggleCompare);
   const isCompared = compareItems.some((item) => item.id === product.id);
+  const discount = getDiscountPercentage(product.price, product.compareAtPrice);
+  const productUrl = `/products/${product.handle}`;
 
-  function addToCart() {
-    addItem(product);
-    toast.success(`${product.title} added to your bag`, {
-      action: { label: 'View bag', onClick: () => window.location.assign('/cart') },
+  function addToBag() {
+    // Products with options (size, colour…) need a choice first: open quick view.
+    if (product.requiresVariantSelection || !product.defaultVariantId) {
+      openQuickView(product.handle);
+      return;
+    }
+    addToCart.mutate([{ merchandiseId: product.defaultVariantId, quantity: 1 }], {
+      onSuccess: openCartDrawer,
+      onError: (error) => toast.error(error.message),
     });
   }
 
@@ -47,18 +55,21 @@ export const ProductCard = memo(function ProductCard({
   return (
     <article className="group relative min-w-0">
       <div className="relative isolate aspect-square overflow-hidden rounded-[1.4rem] bg-ink-100 dark:bg-ink-800">
-        <Link to={`/products/${product.id}`} className="focus-ring block h-full rounded-[1.4rem]">
+        <Link to={productUrl} className="focus-ring block h-full rounded-[1.4rem]">
           <ProductImage
-            src={product.image ?? product.thumbnail}
-            thumbnail={product.thumbnail}
+            image={product.image}
             alt={product.title}
             priority={priority}
-            className="h-full w-full p-4 transition-transform duration-500 ease-out group-hover:scale-105"
+            className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-105"
           />
         </Link>
-        {product.discountPercentage >= 10 ? (
+        {!product.availableForSale ? (
           <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[0.65rem] font-bold text-ink-900 shadow-sm backdrop-blur">
-            -{Math.round(product.discountPercentage)}%
+            Sold out
+          </span>
+        ) : discount >= 10 ? (
+          <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[0.65rem] font-bold text-ink-900 shadow-sm backdrop-blur">
+            -{discount}%
           </span>
         ) : null}
         <div className="absolute top-3 right-3 flex flex-col gap-2">
@@ -91,15 +102,17 @@ export const ProductCard = memo(function ProductCard({
             className="min-w-0 flex-1"
             size="sm"
             icon={<Plus className="size-4" />}
-            onClick={addToCart}
+            loading={addToCart.isPending}
+            disabled={!product.availableForSale}
+            onClick={addToBag}
           >
-            Add
+            {product.availableForSale ? 'Add' : 'Sold out'}
           </Button>
           <Button
             size="icon"
             variant="secondary"
             className="size-9"
-            onClick={() => openQuickView(product.id)}
+            onClick={() => openQuickView(product.handle)}
             aria-label={`Quick view ${product.title}`}
           >
             <Eye className="size-4" aria-hidden="true" />
@@ -107,22 +120,23 @@ export const ProductCard = memo(function ProductCard({
         </div>
       </div>
       <div className="pt-4">
-        <div className="flex items-center justify-between gap-3">
-          <p className="truncate text-[0.68rem] font-bold tracking-wider text-ink-400 uppercase">
-            {product.brand ?? formatCategory(product.category)}
-          </p>
-          <StarRating rating={product.rating} compact />
-        </div>
+        <p className="truncate text-[0.68rem] font-bold tracking-wider text-ink-400 uppercase">
+          {product.vendor || (product.collection ? formatHandle(product.collection) : 'Luma')}
+        </p>
         <h3 className="mt-1 truncate font-medium text-ink-900 dark:text-ink-100">
           <Link
             className="focus-ring rounded hover:text-moss-700 dark:hover:text-moss-300"
-            to={`/products/${product.id}`}
+            to={productUrl}
           >
             {product.title}
           </Link>
         </h3>
         <div className="mt-2">
-          <ProductPrice price={product.price} discountPercentage={product.discountPercentage} />
+          <ProductPrice
+            price={product.price}
+            compareAtPrice={product.compareAtPrice}
+            from={product.priceVaries}
+          />
         </div>
       </div>
     </article>

@@ -1,27 +1,29 @@
 import { RotateCcw, Search } from 'lucide-react';
-import type { ProductCategory, ProductFiltersState, ProductSort } from '@/types/product';
+import type { Collection, ProductFiltersState, ProductSort } from '@/types/product';
 import { formatCurrency } from '@/utils/format';
 
 interface ProductFiltersProps {
   filters: ProductFiltersState;
-  categories: ProductCategory[];
+  collections: Collection[];
   priceCeiling: number;
+  currencyCode: string;
   onChange: (filters: ProductFiltersState) => void;
   onReset: () => void;
 }
 
 const sortOptions: Array<{ value: ProductSort; label: string }> = [
-  { value: 'popularity', label: 'Popularity' },
+  { value: 'featured', label: 'Featured' },
   { value: 'newest', label: 'Newest' },
   { value: 'price-asc', label: 'Price: low to high' },
   { value: 'price-desc', label: 'Price: high to low' },
-  { value: 'rating', label: 'Highest rated' },
+  { value: 'title', label: 'Name: A to Z' },
 ];
 
 export function ProductFilters({
   filters,
-  categories,
+  collections,
   priceCeiling,
+  currencyCode,
   onChange,
   onReset,
 }: ProductFiltersProps) {
@@ -51,19 +53,19 @@ export function ProductFilters({
         </div>
       </div>
       <div>
-        <label htmlFor="category-filter" className="text-sm font-semibold">
-          Category
+        <label htmlFor="collection-filter" className="text-sm font-semibold">
+          Collection
         </label>
         <select
-          id="category-filter"
-          value={filters.category}
-          onChange={(event) => update('category', event.target.value)}
+          id="collection-filter"
+          value={filters.collection}
+          onChange={(event) => update('collection', event.target.value)}
           className="focus-ring surface mt-2 h-11 w-full rounded-xl border px-3 text-sm"
         >
-          <option value="">All categories</option>
-          {categories.map((category) => (
-            <option key={category.slug} value={category.slug}>
-              {category.name}
+          <option value="">All collections</option>
+          {collections.map((collection) => (
+            <option key={collection.handle} value={collection.handle}>
+              {collection.title}
             </option>
           ))}
         </select>
@@ -77,7 +79,7 @@ export function ProductFilters({
             htmlFor="price-filter"
             className="text-sm font-medium text-moss-700 dark:text-moss-300"
           >
-            {formatCurrency(filters.maxPrice)}
+            {formatCurrency(Math.min(filters.maxPrice, priceCeiling), currencyCode)}
           </output>
         </div>
         <input
@@ -91,27 +93,17 @@ export function ProductFilters({
           className="mt-4 h-1.5 w-full cursor-pointer accent-moss-600"
         />
       </div>
-      <fieldset>
-        <legend className="text-sm font-semibold">Minimum rating</legend>
-        <div className="mt-3 space-y-2">
-          {[0, 3, 4, 4.5].map((rating) => (
-            <label
-              key={rating}
-              className="flex cursor-pointer items-center gap-2 text-sm text-ink-600 dark:text-ink-300"
-            >
-              <input
-                type="radio"
-                name="rating"
-                value={rating}
-                checked={filters.minRating === rating}
-                onChange={() => update('minRating', rating)}
-                className="accent-moss-600"
-              />
-              {rating === 0 ? 'All ratings' : `${rating}+ stars`}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <div>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+          <input
+            type="checkbox"
+            checked={filters.inStockOnly}
+            onChange={(event) => update('inStockOnly', event.target.checked)}
+            className="accent-moss-600"
+          />
+          In stock only
+        </label>
+      </div>
       <div>
         <label htmlFor="sort-products" className="text-sm font-semibold">
           Sort by

@@ -6,7 +6,7 @@ import { Logo } from '@/components/brand/Logo';
 const footerLinks: Record<string, Array<readonly [string, string]>> = {
   Shop: [
     ['All products', '/products'],
-    ['Collections', '/categories'],
+    ['Collections', '/collections'],
     ['Wishlist', '/wishlist'],
     ['Cart', '/cart'],
   ],

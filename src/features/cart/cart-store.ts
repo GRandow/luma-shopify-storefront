@@ -1,66 +1,33 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { ProductSnapshot } from '@/types/product';
-import type { ShippingOption } from '@/utils/pricing';
 
-export interface CartItem extends ProductSnapshot {
-  quantity: number;
+/**
+ * The cart itself lives in Shopify (Storefront Cart API) and is cached by
+ * TanStack Query; the browser only remembers which cart belongs to this
+ * shopper. See `cart-queries.ts` for reading and mutating the cart.
+ */
+interface CartSessionState {
+  cartId: string | null;
+  setCartId: (cartId: string | null) => void;
 }
 
-interface CartState {
-  items: CartItem[];
-  promoCode: string | null;
-  shippingOption: ShippingOption;
-  addItem: (product: ProductSnapshot, quantity?: number) => void;
-  removeItem: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
-  setPromoCode: (code: string | null) => void;
-  setShippingOption: (option: ShippingOption) => void;
-  clearCart: () => void;
+interface PersistedCartSession {
+  cartId: string | null;
 }
 
-export const useCartStore = create<CartState>()(
+export const useCartSession = create<CartSessionState>()(
   persist(
     (set) => ({
-      items: [],
-      promoCode: null,
-      shippingOption: 'standard',
-      addItem: (product, quantity = 1) =>
-        set((state) => {
-          const existing = state.items.find((item) => item.id === product.id);
-          if (existing) {
-            return {
-              items: state.items.map((item) =>
-                item.id === product.id
-                  ? { ...item, quantity: Math.min(item.quantity + quantity, item.stock) }
-                  : item,
-              ),
-            };
-          }
-          return {
-            items: [...state.items, { ...product, quantity: Math.min(quantity, product.stock) }],
-          };
-        }),
-      removeItem: (productId) =>
-        set((state) => ({ items: state.items.filter((item) => item.id !== productId) })),
-      updateQuantity: (productId, quantity) =>
-        set((state) => ({
-          items:
-            quantity <= 0
-              ? state.items.filter((item) => item.id !== productId)
-              : state.items.map((item) =>
-                  item.id === productId
-                    ? { ...item, quantity: Math.min(quantity, item.stock) }
-                    : item,
-                ),
-        })),
-      setPromoCode: (promoCode) => set({ promoCode }),
-      setShippingOption: (shippingOption) => set({ shippingOption }),
-      clearCart: () => set({ items: [], promoCode: null, shippingOption: 'standard' }),
+      cartId: null,
+      setCartId: (cartId) => set({ cartId }),
     }),
-    { name: 'luma-cart', version: 1 },
+    {
+      name: 'luma-cart',
+      version: 2,
+      partialize: ({ cartId }): PersistedCartSession => ({ cartId }),
+      // Version 1 stored a local cart with DummyJSON products; it cannot be carried over.
+      migrate: (persisted, version): PersistedCartSession =>
+        version < 2 ? { cartId: null } : (persisted as PersistedCartSession),
+    },
   ),
 );
-
-export const selectCartCount = (state: CartState) =>
-  state.items.reduce((count, item) => count + item.quantity, 0);

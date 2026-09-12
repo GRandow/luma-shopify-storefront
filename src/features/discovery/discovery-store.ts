@@ -5,33 +5,44 @@ import type { ProductSnapshot } from '@/types/product';
 interface DiscoveryState {
   recentlyViewed: ProductSnapshot[];
   recentSearches: string[];
-  recentCategories: string[];
+  /** Collection handles, most recent first. */
+  recentCollections: string[];
   compareItems: ProductSnapshot[];
   recentlyPurchased: ProductSnapshot[];
-  quickViewProductId: number | null;
+  /** Handle of the product open in the quick-view dialog. */
+  quickViewHandle: string | null;
   recordView: (product: ProductSnapshot) => void;
   recordSearch: (query: string) => void;
-  recordCategory: (category: string) => void;
+  recordCollection: (handle: string) => void;
   toggleCompare: (product: ProductSnapshot) => boolean;
   clearCompare: () => void;
   recordPurchase: (products: ProductSnapshot[]) => void;
-  openQuickView: (productId: number) => void;
+  openQuickView: (handle: string) => void;
   closeQuickView: () => void;
 }
 
-function prependUnique<T>(items: T[], value: T, key: (item: T) => string | number, limit: number) {
+type PersistedDiscovery = Pick<
+  DiscoveryState,
+  'recentlyViewed' | 'recentSearches' | 'recentCollections' | 'compareItems' | 'recentlyPurchased'
+>;
+
+const emptyPersistedDiscovery: PersistedDiscovery = {
+  recentlyViewed: [],
+  recentSearches: [],
+  recentCollections: [],
+  compareItems: [],
+  recentlyPurchased: [],
+};
+
+function prependUnique<T>(items: T[], value: T, key: (item: T) => string, limit: number) {
   return [value, ...items.filter((item) => key(item) !== key(value))].slice(0, limit);
 }
 
 export const useDiscoveryStore = create<DiscoveryState>()(
   persist(
     (set, get) => ({
-      recentlyViewed: [],
-      recentSearches: [],
-      recentCategories: [],
-      compareItems: [],
-      recentlyPurchased: [],
-      quickViewProductId: null,
+      ...emptyPersistedDiscovery,
+      quickViewHandle: null,
       recordView: (product) =>
         set((state) => ({
           recentlyViewed: prependUnique(state.recentlyViewed, product, (item) => item.id, 8),
@@ -43,9 +54,9 @@ export const useDiscoveryStore = create<DiscoveryState>()(
           recentSearches: prependUnique(state.recentSearches, normalized, (item) => item, 6),
         }));
       },
-      recordCategory: (category) =>
+      recordCollection: (handle) =>
         set((state) => ({
-          recentCategories: prependUnique(state.recentCategories, category, (item) => item, 6),
+          recentCollections: prependUnique(state.recentCollections, handle, (item) => item, 6),
         })),
       toggleCompare: (product) => {
         const exists = get().compareItems.some((item) => item.id === product.id);
@@ -67,25 +78,28 @@ export const useDiscoveryStore = create<DiscoveryState>()(
             )
             .slice(0, 8),
         })),
-      openQuickView: (quickViewProductId) => set({ quickViewProductId }),
-      closeQuickView: () => set({ quickViewProductId: null }),
+      openQuickView: (quickViewHandle) => set({ quickViewHandle }),
+      closeQuickView: () => set({ quickViewHandle: null }),
     }),
     {
       name: 'luma-discovery',
-      version: 1,
+      version: 2,
       partialize: ({
         recentlyViewed,
         recentSearches,
-        recentCategories,
+        recentCollections,
         compareItems,
         recentlyPurchased,
-      }) => ({
+      }): PersistedDiscovery => ({
         recentlyViewed,
         recentSearches,
-        recentCategories,
+        recentCollections,
         compareItems,
         recentlyPurchased,
       }),
+      // Version 1 stored DummyJSON snapshots keyed by numeric ids.
+      migrate: (persisted, version): PersistedDiscovery =>
+        version < 2 ? emptyPersistedDiscovery : (persisted as PersistedDiscovery),
     },
   ),
 );

@@ -36,6 +36,12 @@ jobs:
 
       - name: Build storefront
         run: npm run build -- --base=/${{ github.event.repository.name }}/
+        # Repository variables (Settings → Secrets and variables → Actions → Variables).
+        # Leave them unset to build against Shopify's public mock.shop sandbox.
+        env:
+          VITE_SHOPIFY_STOREFRONT_API_URL: ${{ vars.VITE_SHOPIFY_STOREFRONT_API_URL }}
+          VITE_SHOPIFY_STOREFRONT_TOKEN: ${{ vars.VITE_SHOPIFY_STOREFRONT_TOKEN }}
+          VITE_HOSTED_CHECKOUT: ${{ vars.VITE_HOSTED_CHECKOUT }}
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6

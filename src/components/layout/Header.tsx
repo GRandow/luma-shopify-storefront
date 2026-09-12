@@ -4,14 +4,15 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
-import { selectCartCount, useCartStore } from '@/features/cart/cart-store';
+import { useCartDrawer } from '@/features/cart/cart-drawer-store';
+import { useCartCount } from '@/features/cart/cart-queries';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
 import { useWishlistStore } from '@/features/wishlist/wishlist-store';
 import { cn } from '@/utils/cn';
 
 const navItems = [
   { to: '/products', label: 'Shop' },
-  { to: '/categories', label: 'Collections' },
+  { to: '/collections', label: 'Collections' },
   { to: '/products?sort=newest', label: 'New arrivals' },
 ];
 
@@ -20,7 +21,8 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-  const cartCount = useCartStore(selectCartCount);
+  const cartCount = useCartCount();
+  const openCartDrawer = useCartDrawer((state) => state.open);
   const wishlistCount = useWishlistStore((state) => state.items.length);
   const recordSearch = useDiscoveryStore((state) => state.recordSearch);
   const recentSearches = useDiscoveryStore((state) => state.recentSearches);
@@ -107,10 +109,12 @@ export function Header() {
                 </span>
               ) : null}
             </NavLink>
-            <NavLink
-              to="/cart"
-              className="focus-ring relative flex size-10 items-center justify-center rounded-full hover:bg-ink-100 dark:hover:bg-white/8"
-              aria-label={`Cart with ${cartCount} items`}
+            <button
+              type="button"
+              className="focus-ring relative flex size-10 cursor-pointer items-center justify-center rounded-full hover:bg-ink-100 dark:hover:bg-white/8"
+              onClick={openCartDrawer}
+              aria-label={`Open bag, ${cartCount} items`}
+              aria-haspopup="dialog"
             >
               <ShoppingBag className="size-5" aria-hidden="true" />
               {cartCount > 0 ? (
@@ -118,7 +122,7 @@ export function Header() {
                   {cartCount}
                 </span>
               ) : null}
-            </NavLink>
+            </button>
           </div>
         </div>
         {menuOpen ? (
@@ -138,10 +142,25 @@ export function Header() {
                   {item.label}
                 </NavLink>
               ))}
-              <NavLink className="focus-ring rounded-xl px-3 py-3 font-medium" to="/wishlist">
+              <NavLink
+                className="focus-ring rounded-xl px-3 py-3 font-medium"
+                to="/wishlist"
+                onClick={() => setMenuOpen(false)}
+              >
                 Wishlist ({wishlistCount})
               </NavLink>
-              <NavLink className="focus-ring rounded-xl px-3 py-3 font-medium" to="/profile">
+              <NavLink
+                className="focus-ring rounded-xl px-3 py-3 font-medium"
+                to="/cart"
+                onClick={() => setMenuOpen(false)}
+              >
+                Bag ({cartCount})
+              </NavLink>
+              <NavLink
+                className="focus-ring rounded-xl px-3 py-3 font-medium"
+                to="/profile"
+                onClick={() => setMenuOpen(false)}
+              >
                 Profile
               </NavLink>
             </div>
@@ -173,7 +192,7 @@ export function Header() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 className="min-w-0 flex-1 bg-transparent py-2 text-lg outline-none placeholder:text-ink-400"
-                placeholder="Search objects, categories, brands..."
+                placeholder="Search products, collections, brands..."
               />
               <Button size="sm" variant="ghost" onClick={() => setSearchOpen(false)}>
                 Close

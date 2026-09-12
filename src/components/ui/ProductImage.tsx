@@ -1,68 +1,68 @@
 import type { ImgHTMLAttributes } from 'react';
+import type { StorefrontImage } from '@/types/product';
 import { cn } from '@/utils/cn';
-
-/**
- * DummyJSON serves two fixed sizes per product: `thumbnail.webp` (300×300)
- * and `images[n]` (1000×1000). Rendering the thumbnail anywhere larger than
- * ~150 CSS px (300 device px on a 2× screen) is what made the store look
- * blurry, so every product picture goes through this component and lets the
- * browser choose the right file from a `srcset`.
- */
-export const THUMBNAIL_WIDTH = 300;
-export const IMAGE_WIDTH = 1000;
+import { buildSrcSet, DEFAULT_IMAGE_WIDTH, resizeImage } from '@/utils/image';
 
 /** Approximate rendered width of a product-grid card (2 → 3 → 4 columns). */
 export const PRODUCT_CARD_SIZES = '(min-width: 1280px) 20rem, (min-width: 1024px) 33vw, 50vw';
 
-interface ProductImageProps
-  extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'width' | 'height'> {
-  /** Best available source — the 1000px photo when we have it. */
-  src: string;
-  /** Optional 300px variant; lets the browser pick the lighter file for small renders. */
-  thumbnail?: string | undefined;
+interface ProductImageProps extends Omit<
+  ImgHTMLAttributes<HTMLImageElement>,
+  'src' | 'srcSet' | 'width' | 'height' | 'alt'
+> {
+  image: StorefrontImage | null;
+  /** Overrides the CDN alt text; defaults to it (or an empty string for decorative uses). */
+  alt?: string;
   /**
    * How wide the image renders, in `sizes` attribute syntax. Keep it close to
-   * reality: the browser multiplies it by the device pixel ratio to choose
-   * between the 300px and 1000px files.
+   * reality: the browser multiplies it by the device pixel ratio to choose a
+   * rendition from the `srcset` built out of Shopify CDN resizes.
    */
   sizes?: string;
   /** Above-the-fold image: load eagerly with high priority. */
   priority?: boolean;
+  /** How the picture fills its box. Product photos are cropped; zoomed views are not. */
+  fit?: 'cover' | 'contain';
 }
 
-/** Commas and whitespace are separators inside `srcset`; escape them just in case. */
-function toCandidate(url: string, width: number) {
-  return `${url.replace(/[\s,]/g, encodeURIComponent)} ${width}w`;
-}
-
+/**
+ * Renders a Storefront API image with a responsive `srcset`. Shopify's CDN
+ * resizes on request, so the original (often 2000px+) file is never shipped
+ * to a 300px card.
+ */
 export function ProductImage({
-  src,
-  thumbnail,
+  image,
+  alt,
   sizes = PRODUCT_CARD_SIZES,
   priority = false,
-  alt = '',
+  fit = 'cover',
   className,
   loading,
   decoding = 'async',
   ...props
 }: ProductImageProps) {
-  const small = thumbnail && thumbnail !== src ? thumbnail : undefined;
-  const srcSet = small
-    ? `${toCandidate(small, THUMBNAIL_WIDTH)}, ${toCandidate(src, IMAGE_WIDTH)}`
-    : undefined;
+  if (!image) {
+    return (
+      <div
+        className={cn('bg-ink-100 dark:bg-ink-800', className)}
+        role="img"
+        aria-label={alt ?? 'No image available'}
+      />
+    );
+  }
 
   return (
     <img
-      src={src}
-      srcSet={srcSet}
-      sizes={srcSet ? sizes : undefined}
-      width={IMAGE_WIDTH}
-      height={IMAGE_WIDTH}
-      alt={alt}
+      src={resizeImage(image.url, DEFAULT_IMAGE_WIDTH)}
+      srcSet={buildSrcSet(image.url)}
+      sizes={sizes}
+      width={image.width ?? undefined}
+      height={image.height ?? undefined}
+      alt={alt ?? image.altText ?? ''}
       loading={loading ?? (priority ? 'eager' : 'lazy')}
       fetchPriority={priority ? 'high' : undefined}
       decoding={decoding}
-      className={cn('object-contain', className)}
+      className={cn(fit === 'cover' ? 'object-cover' : 'object-contain', className)}
       {...props}
     />
   );
