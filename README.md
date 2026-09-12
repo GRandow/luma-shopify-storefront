@@ -8,7 +8,7 @@
 
 A headless Shopify storefront built with React, TypeScript and Vite. Catalog, collections, search and the cart come from the **Shopify Storefront API (GraphQL)**; the UI is a custom React front end with wishlist, product comparison, quick view and a demo checkout.
 
-🚀 **Live demo:** https://grandow.github.io/luma-storefront/
+🚀 **Live demo:** https://grandow.github.io/luma-shopify-storefront/
 
 Out of the box the app talks to [mock.shop](https://mock.shop), Shopify's public Storefront API sandbox, so it runs without a store or an access token. Pointing it at a real (development) store is a matter of two environment variables.
 
