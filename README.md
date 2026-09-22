@@ -7,13 +7,15 @@
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss)
 ![CI](https://github.com/GRandow/luma-shopify-storefront/actions/workflows/ci.yml/badge.svg)
 
-A headless Shopify storefront built with React, TypeScript and Vite. Catalog, collections, search and the cart come from the **Shopify Storefront API (GraphQL)**; the UI is a custom React front end with wishlist, product comparison, quick view and a demo checkout.
+A headless Shopify storefront built with React, TypeScript and Vite. Catalog, collections, search and the cart come from the **Shopify Storefront API (GraphQL)**, customer sign-in, addresses and order history from the **Customer Account API**; the UI is a custom React front end with wishlist, product comparison, quick view and a demo checkout.
 
 🚀 **Live demo:** https://grandow.github.io/luma-shopify-storefront/
 
 The live demo runs against a Shopify **development store** with Shopify's hosted checkout in test mode: add something to the bag, go to "Secure checkout" and pay with the Bogus Gateway test card (card number `1`, any future expiry date, any CVV). Card `2` simulates a declined payment and `3` a gateway error. Development stores keep a storefront password that Shopify's checkout asks for once per browser; the demo store's password is **`luma`**, and the app shows it next to the checkout button.
 
-Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shopify's public Storefront API sandbox, so it runs without a store or an access token. Pointing it at your own development store is a matter of three environment variables.
+Sign in from the account icon with any email address you can read: Shopify sends a one-time code, and the account area then shows your profile and the orders you place — the cart is tied to the customer, so checkout opens already signed in and the order lands on the account.
+
+Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shopify's public Storefront API sandbox, so it runs without a store or an access token. Pointing it at your own development store is a matter of a few environment variables.
 
 ## Features
 
@@ -26,6 +28,7 @@ Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shop
 - Quick view dialog with the same variant selector as the product page
 - Product comparison tray (up to three products: price, availability, brand, collection)
 - Persistent wishlist and recently viewed products (browser storage, survives reloads)
+- **Customer accounts** through the Customer Account API: OAuth 2.0 + PKCE sign-in with Shopify's passwordless login, profile, saved addresses and paginated order history; `cartBuyerIdentityUpdate` ties the cart to the customer so checkout is pre-authenticated
 - Demo multi-step checkout (React Hook Form + Zod) that can be swapped for Shopify's hosted checkout with one flag
 - Dark mode, accessible dialogs and keyboard-friendly filters
 
@@ -41,11 +44,15 @@ src/
 │  ├─ client.ts           storefrontRequest(): fetch wrapper, token header, GraphQL error handling
 │  ├─ queries.ts          ProductFields / CartFields fragments and every operation the app uses
 │  └─ adapters.ts         Storefront API payloads → app domain model (Product, Collection, Cart)
-├─ services/              product-service.ts (catalog) · cart-service.ts (Cart API) · auth-service.ts (demo login)
+├─ services/customer-account/  Customer Account API: OAuth/PKCE flow (oauth.ts, pkce.ts), endpoints derived
+│                          from the shop id (config.ts), authenticated GraphQL client, queries, adapters
+├─ services/              product-service.ts (catalog) · cart-service.ts (Cart API) · customer-service.ts (account)
 ├─ features/
 │  ├─ products/           queries (TanStack), client-side filters, variant selection, cards, gallery
 │  ├─ cart/               cart-queries.ts (useCart / useAddToCart / …) · cart-store.ts (persisted cart id) · CartDrawer
-│  ├─ wishlist/ discovery/ theme/ auth/  Zustand stores
+│  ├─ auth/               auth-store.ts (persisted session) · session.ts (token refresh, sign-out) ·
+│  │                      customer-queries.ts (profile, orders) · AuthCallbackGate (finishes the OAuth redirect)
+│  ├─ wishlist/ discovery/ theme/  Zustand stores
 │  └─ checkout/           form schema for the demo checkout
 ├─ types/                 Domain model consumed by the UI (product.ts, cart.ts, user.ts)
 └─ pages/                 Route components
@@ -56,6 +63,7 @@ A few decisions worth calling out:
 - **Adapters between API and UI.** Components never see Storefront API payloads. `adapters.ts` turns them into a small domain model (money as numbers, flattened option values, a resolved compare-at price), so a schema change touches one file.
 - **The cart lives in Shopify.** The browser only stores the cart id (`localStorage`). Reads and writes go through TanStack Query, and every mutation replaces the cached cart with the payload Shopify returns — no local price maths. An expired cart (Shopify drops them after inactivity) is detected from the `cartId` user error and transparently recreated.
 - **Client-side refinement on top of server queries.** Search hits Shopify's `search` query and collections load through `collection(handle:)`; price ceiling, availability and sorting are refined locally because the catalog is small. Cursor-based pagination is the next step for larger stores.
+- **Customer accounts are a public OAuth client.** There is no server to keep a secret, so sign-in uses the authorization-code flow with PKCE (`S256`), a `state` check against the stored attempt and a `nonce` check on the id token. Shopify's hosted login handles the one-time code; the app only ever holds the tokens, refreshes the access token a minute before it expires (one refresh shared by concurrent requests) and signs out through Shopify's end-session endpoint. The token endpoint checks the browser's `Origin`, which is why the request is made from the page itself. After sign-in the cart gets the customer's token (`cartBuyerIdentityUpdate`), and carts created while signed in are theirs from `cartCreate`.
 - **Images.** `ProductImage` builds a `srcset` from Shopify CDN resizes (`?width=`), so a 4096px source is never shipped to a 300px card.
 - **Products with options** open the quick view instead of silently adding a default variant; option combinations that do not exist as variants are disabled, sold-out ones are struck through.
 
@@ -87,21 +95,32 @@ By default `VITE_SHOPIFY_STOREFRONT_API_URL` points at `https://mock.shop/api`. 
    VITE_STORE_PASSWORD_HINT=   # optional: your dev store's password, shown next to the checkout button
    ```
 
+4. For customer accounts, open the Headless channel → your storefront → **Customer Account API** and, under _Application setup_, register where Shopify may send customers back:
+
+   | Setting              | Value                                                                                                           |
+   | -------------------- | --------------------------------------------------------------------------------------------------------------- |
+   | Callback URI(s)      | `https://<host>/luma-shopify-storefront/` (and `http://localhost:5173/luma-shopify-storefront/` for local work) |
+   | JavaScript origin(s) | `https://<host>` (and `http://localhost:5173`)                                                                  |
+   | Logout URI           | `https://<host>/luma-shopify-storefront/`                                                                       |
+
+   Then add the shop id (the number in the API endpoints shown on that page) and the client id to `.env`:
+
+   ```bash
+   VITE_SHOPIFY_SHOP_ID=<shop id>
+   VITE_SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID=<client id>
+   ```
+
+   The store must use **new customer accounts** (Settings → Customer accounts), which is the default for development stores. Without these two variables the account area simply hides sign-in.
+
 The GitHub Pages workflow reads the same values from repository variables, so the live demo can switch stores without a code change.
-
-## Demo account
-
-The customer area still uses a demo authentication backend (DummyJSON) while customer accounts move to Shopify's Customer Account API.
-
-**Username:** `emilys` · **Password:** `emilyspass`
 
 ## Roadmap
 
-- Customer accounts through the Customer Account API (login, addresses, order history)
+- Address book editing (`customerAddressCreate` / `customerAddressUpdate` on the Customer Account API)
 - Cursor-based pagination and server-side filters (`products(query:)`, `filters` on collections)
 - Predictive search in the header (`predictiveSearch`)
 - Market/currency selection (`@inContext`)
 
 ## About
 
-Built as part of my portfolio as a Shopify developer to show a real headless Shopify integration: Storefront API modelling, Cart API state management, responsive CDN images and a componentised React front end.
+Built as part of my portfolio as a Shopify developer to show a real headless Shopify integration: Storefront API modelling, Cart API state management, a Customer Account API sign-in done by the book (OAuth 2.0 + PKCE), responsive CDN images and a componentised React front end.

@@ -1,6 +1,7 @@
 import { toCart } from '@/services/storefront/adapters';
 import { storefrontRequest } from '@/services/storefront/client';
 import {
+  CART_BUYER_IDENTITY_UPDATE_MUTATION,
   CART_CREATE_MUTATION,
   CART_DISCOUNT_CODES_UPDATE_MUTATION,
   CART_LINES_ADD_MUTATION,
@@ -9,6 +10,8 @@ import {
   CART_QUERY,
 } from '@/services/storefront/queries';
 import type {
+  CartBuyerIdentityInput,
+  CartBuyerIdentityUpdateData,
   CartCreateData,
   CartDiscountCodesUpdateData,
   CartLinesAddData,
@@ -53,11 +56,12 @@ export const cartService = {
     return data.cart ? toCart(data.cart) : null;
   },
 
-  async create(lines: CartLineInput[] = []): Promise<Cart> {
-    const data = await storefrontRequest<CartCreateData, { lines: CartLineInput[] }>(
-      CART_CREATE_MUTATION,
-      { lines },
-    );
+  /** Creates a cart; pass the customer's buyer identity so it is theirs from the start. */
+  async create(lines: CartLineInput[] = [], buyerIdentity?: CartBuyerIdentityInput): Promise<Cart> {
+    const data = await storefrontRequest<
+      CartCreateData,
+      { lines: CartLineInput[]; buyerIdentity?: CartBuyerIdentityInput }
+    >(CART_CREATE_MUTATION, buyerIdentity ? { lines, buyerIdentity } : { lines });
     const cart = unwrapCartPayload(data.cartCreate);
     if (!cart) throw new CartUserError(['The cart could not be created.']);
     return cart;
@@ -93,5 +97,21 @@ export const cartService = {
       { cartId: string; discountCodes: string[] }
     >(CART_DISCOUNT_CODES_UPDATE_MUTATION, { cartId, discountCodes });
     return unwrapCartPayload(data.cartDiscountCodesUpdate);
+  },
+
+  /**
+   * Ties the cart to the signed-in customer. Shopify's checkout then opens
+   * already authenticated, with the customer's email and addresses filled in,
+   * and the order lands on their account.
+   */
+  async updateBuyerIdentity(
+    cartId: string,
+    buyerIdentity: CartBuyerIdentityInput,
+  ): Promise<Cart | null> {
+    const data = await storefrontRequest<
+      CartBuyerIdentityUpdateData,
+      { cartId: string; buyerIdentity: CartBuyerIdentityInput }
+    >(CART_BUYER_IDENTITY_UPDATE_MUTATION, { cartId, buyerIdentity });
+    return unwrapCartPayload(data.cartBuyerIdentityUpdate);
   },
 };

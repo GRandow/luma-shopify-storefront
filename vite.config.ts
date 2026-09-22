@@ -22,6 +22,17 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/test/setup.ts',
     css: true,
+    // Tests run against the mock.shop defaults whatever the developer's .env
+    // says: a store-specific .env (hosted checkout, customer accounts) must not
+    // change what the components under test render.
+    env: {
+      VITE_SHOPIFY_STOREFRONT_API_URL: '',
+      VITE_SHOPIFY_STOREFRONT_TOKEN: '',
+      VITE_HOSTED_CHECKOUT: 'false',
+      VITE_STORE_PASSWORD_HINT: '',
+      VITE_SHOPIFY_SHOP_ID: '',
+      VITE_SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID: '',
+    },
     coverage: {
       reporter: ['text', 'html'],
       include: ['src/**/*.{ts,tsx}'],

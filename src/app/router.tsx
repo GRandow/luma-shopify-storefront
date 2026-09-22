@@ -27,14 +27,8 @@ export const router = createHashRouter([
       { path: 'categories', element: <CategoriesPage /> },
       { path: 'cart', element: <CartPage /> },
       { path: 'wishlist', element: <WishlistPage /> },
-      {
-        path: 'checkout',
-        element: (
-          <ProtectedRoute>
-            <CheckoutPage />
-          </ProtectedRoute>
-        ),
-      },
+      // The demo checkout (mock.shop) takes guests; a real store uses Shopify's checkout.
+      { path: 'checkout', element: <CheckoutPage /> },
       { path: 'login', element: <LoginPage /> },
       {
         path: 'profile',

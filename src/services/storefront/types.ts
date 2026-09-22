@@ -158,3 +158,14 @@ export interface CartLinesRemoveData {
 export interface CartDiscountCodesUpdateData {
   cartDiscountCodesUpdate: CartMutationPayload;
 }
+
+export interface CartBuyerIdentityUpdateData {
+  cartBuyerIdentityUpdate: CartMutationPayload;
+}
+
+/** Subset of `CartBuyerIdentityInput` the app uses. */
+export interface CartBuyerIdentityInput {
+  /** A Customer Account API access token; `null` detaches the customer from the cart. */
+  customerAccessToken?: string | null;
+  email?: string | null;
+}

@@ -1,51 +1,48 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Address, AuthUser, Order } from '@/types/user';
+import type { CustomerSession } from '@/services/customer-account/oauth';
+import type { Customer } from '@/types/user';
 
+/**
+ * The customer's session with Shopify's Customer Account API.
+ *
+ * Tokens are kept in browser storage because this is a public client with no
+ * server of its own (Hydrogen would keep them in a server-side session). The
+ * access token is short-lived and refreshed by `features/auth/session.ts`;
+ * signing out also ends the session on Shopify's side.
+ */
 interface AuthState {
-  user: AuthUser | null;
-  orders: Order[];
-  addresses: Address[];
+  session: CustomerSession | null;
+  customer: Customer | null;
   isAuthenticated: boolean;
-  setUser: (user: AuthUser) => void;
-  logout: () => void;
-  addOrder: (order: Order) => void;
-  addAddress: (address: Address) => void;
+  setSession: (session: CustomerSession) => void;
+  setCustomer: (customer: Customer | null) => void;
+  clear: () => void;
 }
 
-type PersistedAuth = Pick<AuthState, 'user' | 'orders' | 'addresses' | 'isAuthenticated'>;
+type PersistedAuth = Pick<AuthState, 'session' | 'customer' | 'isAuthenticated'>;
+
+const signedOut: PersistedAuth = { session: null, customer: null, isAuthenticated: false };
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      user: null,
-      orders: [],
-      addresses: [],
-      isAuthenticated: false,
-      setUser: (user) => set({ user, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false }),
-      addOrder: (order) => set((state) => ({ orders: [order, ...state.orders] })),
-      addAddress: (address) =>
-        set((state) => ({
-          addresses: address.isDefault
-            ? [address, ...state.addresses.map((item) => ({ ...item, isDefault: false }))]
-            : [address, ...state.addresses],
-        })),
+      ...signedOut,
+      setSession: (session) => set({ session, isAuthenticated: true }),
+      setCustomer: (customer) => set({ customer }),
+      clear: () => set({ ...signedOut }),
     }),
     {
       name: 'luma-session',
-      version: 2,
-      partialize: ({ user, orders, addresses, isAuthenticated }): PersistedAuth => ({
-        user,
-        orders,
-        addresses,
+      version: 3,
+      partialize: ({ session, customer, isAuthenticated }): PersistedAuth => ({
+        session,
+        customer,
         isAuthenticated,
       }),
-      // Version 1 orders referenced DummyJSON products; keep the session, drop the orders.
-      migrate: (persisted, version): PersistedAuth => {
-        const state = persisted as PersistedAuth;
-        return version < 2 ? { ...state, orders: [] } : state;
-      },
+      // Versions 1 and 2 held a demo (DummyJSON) login; nothing to carry over.
+      migrate: (persisted, version): PersistedAuth =>
+        version < 3 ? { ...signedOut } : (persisted as PersistedAuth),
     },
   ),
 );

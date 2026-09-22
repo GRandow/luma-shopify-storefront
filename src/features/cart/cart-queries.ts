@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { getCartBuyerIdentity } from '@/features/auth/session';
 import { useCartSession } from '@/features/cart/cart-store';
 import { cartService } from '@/services/cart-service';
 import type { Cart, CartLineInput, CartLineUpdateInput } from '@/types/cart';
@@ -55,14 +56,17 @@ function useCartMutation<TVariables>(
   });
 }
 
-/** Adds lines to the current cart, creating one when needed (or when the old one expired). */
+/**
+ * Adds lines to the current cart, creating one when needed (or when the old
+ * one expired). A cart created for a signed-in customer is tied to them.
+ */
 export function useAddToCart() {
   return useCartMutation<CartLineInput[]>(async (cartId, lines) => {
     if (cartId) {
       const cart = await cartService.addLines(cartId, lines);
       if (cart) return cart;
     }
-    return cartService.create(lines);
+    return cartService.create(lines, await getCartBuyerIdentity());
   });
 }
 

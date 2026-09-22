@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
+import { useAuthStore } from '@/features/auth/auth-store';
 import { useCartDrawer } from '@/features/cart/cart-drawer-store';
 import { useCartCount } from '@/features/cart/cart-queries';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
@@ -21,6 +22,10 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const accountLink = isAuthenticated
+    ? { to: '/profile', label: 'Account' }
+    : { to: '/login', label: 'Sign in' };
   const cartCount = useCartCount();
   const openCartDrawer = useCartDrawer((state) => state.open);
   const wishlistCount = useWishlistStore((state) => state.items.length);
@@ -91,9 +96,9 @@ export function Header() {
             </Button>
             <ThemeToggle />
             <NavLink
-              to="/profile"
+              to={accountLink.to}
               className="focus-ring hidden size-10 items-center justify-center rounded-full hover:bg-ink-100 sm:flex dark:hover:bg-white/8"
-              aria-label="Profile"
+              aria-label={accountLink.label}
             >
               <UserRound className="size-5" aria-hidden="true" />
             </NavLink>
@@ -158,10 +163,10 @@ export function Header() {
               </NavLink>
               <NavLink
                 className="focus-ring rounded-xl px-3 py-3 font-medium"
-                to="/profile"
+                to={accountLink.to}
                 onClick={() => setMenuOpen(false)}
               >
-                Profile
+                {accountLink.label}
               </NavLink>
             </div>
           </nav>

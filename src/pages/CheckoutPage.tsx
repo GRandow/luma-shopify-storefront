@@ -25,9 +25,11 @@ const steps = [
 ] as const;
 
 /**
- * Demonstration checkout. Prices come from the Shopify cart; the shipping
- * estimate and the payment step are simulated. With `VITE_HOSTED_CHECKOUT`
- * enabled the cart page sends shoppers to Shopify's checkout instead.
+ * Demonstration checkout for the mock.shop sandbox, open to guests. Prices
+ * come from the Shopify cart; the shipping estimate and the payment step are
+ * simulated and nothing is recorded. With `VITE_HOSTED_CHECKOUT` enabled the
+ * cart sends shoppers to Shopify's checkout instead, where real orders are
+ * placed and filed under the signed-in customer's account.
  */
 export default function CheckoutPage() {
   const cartQuery = useCart();
@@ -50,31 +52,30 @@ function CheckoutForm({ cart, onComplete }: CheckoutFormProps) {
   const [step, setStep] = useState(0);
   const [processing, setProcessing] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const user = useAuthStore((state) => state.user);
-  const addOrder = useAuthStore((state) => state.addOrder);
-  const addAddress = useAuthStore((state) => state.addAddress);
+  const customer = useAuthStore((state) => state.customer);
   const recordPurchase = useDiscoveryStore((state) => state.recordPurchase);
+  const defaultAddress = customer?.defaultAddress ?? null;
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
     mode: 'onTouched',
     defaultValues: {
       customer: {
-        email: user?.email ?? '',
-        firstName: user?.firstName ?? '',
-        lastName: user?.lastName ?? '',
-        phone: '',
+        email: customer?.email ?? '',
+        firstName: customer?.firstName ?? '',
+        lastName: customer?.lastName ?? '',
+        phone: customer?.phone ?? '',
       },
       shipping: {
-        address: '',
+        address: defaultAddress?.address ?? '',
         apartment: '',
-        city: '',
-        state: '',
-        postalCode: '',
+        city: defaultAddress?.city ?? '',
+        state: defaultAddress?.state ?? '',
+        postalCode: defaultAddress?.postalCode ?? '',
         country: 'United States',
         shippingMethod: 'standard',
       },
       payment: {
-        cardholderName: user ? `${user.firstName} ${user.lastName}` : '',
+        cardholderName: customer ? `${customer.firstName} ${customer.lastName}`.trim() : '',
         cardNumber: '',
         expiry: '',
         cvv: '',
@@ -133,13 +134,14 @@ function CheckoutForm({ cart, onComplete }: CheckoutFormProps) {
       isDefault: true,
     };
     const order: Order = {
-      id: `LM-${Date.now().toString().slice(-8)}`,
-      createdAt: new Date().toISOString(),
-      status: 'Processing',
+      id: crypto.randomUUID(),
+      name: `#LM-${Date.now().toString().slice(-6)}`,
+      processedAt: new Date().toISOString(),
+      paymentStatus: 'Paid',
+      fulfillmentStatus: 'Unfulfilled',
       items: cart.lines.map((line) => ({
         id: line.id,
         variantId: line.merchandise.id,
-        handle: line.merchandise.product.handle,
         title: line.merchandise.product.title,
         variantTitle: getLineVariantTitle(line),
         image: line.merchandise.image,
@@ -148,9 +150,8 @@ function CheckoutForm({ cart, onComplete }: CheckoutFormProps) {
       })),
       total: summary.total,
       shippingAddress: address,
+      statusPageUrl: null,
     };
-    addOrder(order);
-    addAddress(address);
     recordPurchase(cart.lines.map(cartLineToProductSnapshot));
     setProcessing(false);
     // The cart is cleared by the confirmation screen once it is on screen, so
@@ -410,10 +411,10 @@ function OrderConfirmation({ order }: { order: Order }) {
           tabIndex={-1}
           className="focus:outline-none font-display mt-6 text-4xl font-semibold tracking-tight"
         >
-          Thank you, {order.shippingAddress.firstName}.
+          Thank you{order.shippingAddress ? `, ${order.shippingAddress.firstName}` : ''}.
         </h1>
         <p className="mt-3 text-ink-500 dark:text-ink-400">
-          Order <strong className="text-ink-900 dark:text-white">{order.id}</strong> is confirmed.
+          Order <strong className="text-ink-900 dark:text-white">{order.name}</strong> is confirmed.
           We are getting it ready now.
         </p>
         <div className="surface mt-8 rounded-3xl border p-6 text-left">
@@ -424,22 +425,25 @@ function OrderConfirmation({ order }: { order: Order }) {
           <div className="mt-4 flex justify-between">
             <span className="text-ink-500 dark:text-ink-400">Status</span>
             <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">
-              {order.status}
+              {order.fulfillmentStatus}
             </span>
           </div>
         </div>
+        <p className="mt-4 text-xs text-ink-400">
+          This is the demo checkout: nothing was charged and the order is not kept.
+        </p>
         <div className="mt-7 flex justify-center gap-3">
           <Link
             className="focus-ring inline-flex h-11 items-center rounded-full bg-ink-950 px-5 text-sm font-semibold text-white dark:bg-white dark:text-ink-950"
-            to="/profile"
-          >
-            View your orders
-          </Link>
-          <Link
-            className="focus-ring inline-flex h-11 items-center rounded-full border border-ink-200 px-5 text-sm font-semibold dark:border-white/15"
             to="/products"
           >
             Continue shopping
+          </Link>
+          <Link
+            className="focus-ring inline-flex h-11 items-center rounded-full border border-ink-200 px-5 text-sm font-semibold dark:border-white/15"
+            to="/"
+          >
+            Back to home
           </Link>
         </div>
       </section>

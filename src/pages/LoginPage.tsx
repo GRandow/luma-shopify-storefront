@@ -1,46 +1,38 @@
-import { useEffect } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { ArrowRight, LockKeyhole } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { ArrowRight, LockKeyhole, MailCheck, ShieldCheck } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { Button } from '@/components/ui/Button';
-import { FormField } from '@/components/ui/FormField';
-import { authService } from '@/services/auth-service';
 import { useAuthStore } from '@/features/auth/auth-store';
+import { isCustomerAccountsEnabled } from '@/services/customer-account/config';
+import { beginLogin } from '@/services/customer-account/oauth';
 
-const loginSchema = z.object({
-  username: z.string().trim().min(2, 'Enter your username'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
-
+/**
+ * Sign-in is delegated to Shopify: this page starts the OAuth flow and
+ * Shopify's hosted page sends the customer a one-time code by email. The
+ * tokens come back through `AuthCallbackGate`.
+ */
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const setUser = useAuthStore((state) => state.setUser);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [redirecting, setRedirecting] = useState(false);
   const from = (location.state as { from?: string } | null)?.from ?? '/profile';
-  const form = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { username: 'emilys', password: 'emilyspass' },
-  });
-  const loginMutation = useMutation({
-    mutationFn: (credentials: LoginForm) => authService.login(credentials),
-    onSuccess: (user) => {
-      setUser(user);
-      toast.success(`Welcome back, ${user.firstName}`);
-      void navigate(from, { replace: true });
-    },
-    onError: () => toast.error('Those credentials were not accepted. Try the demo account.'),
-  });
+  const accountsEnabled = isCustomerAccountsEnabled();
 
   useEffect(() => {
-    if (isAuthenticated) void navigate('/profile', { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) void navigate(from, { replace: true });
+  }, [isAuthenticated, from, navigate]);
+
+  async function signIn() {
+    setRedirecting(true);
+    try {
+      await beginLogin(from);
+    } catch (error) {
+      setRedirecting(false);
+      toast.error(error instanceof Error ? error.message : 'Sign-in could not be started.');
+    }
+  }
 
   return (
     <div className="page-shell grid min-h-[72vh] place-items-center py-14">
@@ -48,47 +40,46 @@ export default function LoginPage() {
         <div className="grid size-12 place-items-center rounded-2xl bg-moss-100 text-moss-800 dark:bg-moss-900 dark:text-moss-200">
           <LockKeyhole className="size-5" />
         </div>
-        <h1 className="font-display mt-6 text-3xl font-semibold tracking-tight">Welcome back</h1>
+        <h1 className="font-display mt-6 text-3xl font-semibold tracking-tight">Your account</h1>
         <p className="mt-2 text-sm leading-6 text-ink-500 dark:text-ink-400">
-          Sign in to check out, view orders, and manage saved addresses.
+          Sign in to see your orders, saved addresses and a checkout with your details filled in.
         </p>
-        <form
-          className="mt-7 space-y-5"
-          onSubmit={(event) => {
-            void form.handleSubmit((values) => loginMutation.mutate(values))(event);
-          }}
-          noValidate
-        >
-          <FormField
-            id="username"
-            label="Username"
-            autoComplete="username"
-            error={form.formState.errors.username?.message}
-            {...form.register('username')}
-          />
-          <FormField
-            id="password"
-            label="Password"
-            type="password"
-            autoComplete="current-password"
-            error={form.formState.errors.password?.message}
-            {...form.register('password')}
-          />
-          <Button
-            className="w-full"
-            size="lg"
-            type="submit"
-            loading={loginMutation.isPending}
-            icon={<ArrowRight className="size-4" />}
-          >
-            Sign in
-          </Button>
-        </form>
-        <div className="mt-6 rounded-2xl bg-ink-50 p-4 text-xs leading-5 text-ink-600 dark:bg-white/5 dark:text-ink-300">
-          <strong>Demo account</strong>
-          <br />
-          Username: emilys · Password: emilyspass
-        </div>
+        {accountsEnabled ? (
+          <>
+            <ul className="mt-6 space-y-3 text-sm text-ink-600 dark:text-ink-300">
+              <li className="flex gap-3">
+                <MailCheck className="mt-0.5 size-4 shrink-0 text-moss-700 dark:text-moss-300" />
+                Shopify emails you a one-time code. There is no password to remember.
+              </li>
+              <li className="flex gap-3">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-moss-700 dark:text-moss-300" />
+                Your details stay with Shopify; this storefront only receives a session token.
+              </li>
+            </ul>
+            <Button
+              className="mt-7 w-full"
+              size="lg"
+              loading={redirecting}
+              icon={<ArrowRight className="size-4" />}
+              onClick={() => void signIn()}
+            >
+              Sign in with Shopify
+            </Button>
+            <div className="mt-6 rounded-2xl bg-ink-50 p-4 text-xs leading-5 text-ink-600 dark:bg-white/5 dark:text-ink-300">
+              <strong>Demo store</strong>
+              <br />
+              Use any email address you can read; the code arrives within a minute. New addresses
+              become a customer of the demo store.
+            </div>
+          </>
+        ) : (
+          <div className="mt-6 rounded-2xl bg-ink-50 p-4 text-sm leading-6 text-ink-600 dark:bg-white/5 dark:text-ink-300">
+            Customer accounts need a Shopify store. This build runs against the mock.shop sandbox,
+            which has no customers: point the app at a development store and set{' '}
+            <code>VITE_SHOPIFY_SHOP_ID</code> and{' '}
+            <code>VITE_SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID</code> to enable sign-in.
+          </div>
+        )}
       </div>
     </div>
   );
