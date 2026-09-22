@@ -5,6 +5,7 @@
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite)
 ![Shopify Storefront API](https://img.shields.io/badge/Shopify-Storefront%20API-96BF48?logo=shopify&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss)
+![CI](https://github.com/GRandow/luma-shopify-storefront/actions/workflows/ci.yml/badge.svg)
 
 A headless Shopify storefront built with React, TypeScript and Vite. Catalog, collections, search and the cart come from the **Shopify Storefront API (GraphQL)**; the UI is a custom React front end with wishlist, product comparison, quick view and a demo checkout.
 
@@ -58,12 +59,16 @@ A few decisions worth calling out:
 
 ## Getting started
 
+Requires Node.js 22 or newer (`nvm use` picks the version from `.nvmrc`).
+
 ```bash
 npm install
 npm run dev
 ```
 
-Other scripts: `npm run build`, `npm test`, `npm run lint`, `npm run format`.
+Other scripts: `npm run build`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run format`.
+
+Every push and pull request runs lint, formatting, typecheck, tests and the production build through GitHub Actions (`.github/workflows/ci.yml`); `main` is then deployed to GitHub Pages (`deploy.yml`).
 
 ## Connecting a Shopify store
 
