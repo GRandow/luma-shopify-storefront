@@ -11,7 +11,9 @@ A headless Shopify storefront built with React, TypeScript and Vite. Catalog, co
 
 🚀 **Live demo:** https://grandow.github.io/luma-shopify-storefront/
 
-Out of the box the app talks to [mock.shop](https://mock.shop), Shopify's public Storefront API sandbox, so it runs without a store or an access token. Pointing it at a real (development) store is a matter of two environment variables.
+The live demo runs against a Shopify **development store** with Shopify's hosted checkout in test mode: add something to the bag, go to "Secure checkout" and pay with the Bogus Gateway test card (card number `1`, any future expiry date, any CVV). Card `2` simulates a declined payment and `3` a gateway error.
+
+Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shopify's public Storefront API sandbox, so it runs without a store or an access token. Pointing it at your own development store is a matter of three environment variables.
 
 ## Features
 
