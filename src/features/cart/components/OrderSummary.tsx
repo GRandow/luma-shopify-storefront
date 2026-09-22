@@ -1,5 +1,5 @@
 import { ProductImage } from '@/components/ui/ProductImage';
-import { CheckoutButton } from '@/features/cart/components/CheckoutButton';
+import { CheckoutButton, CheckoutPasswordHint } from '@/features/cart/components/CheckoutButton';
 import { getCartDiscount, getLineVariantTitle, type Cart } from '@/types/cart';
 import type { PriceSummary } from '@/utils/pricing';
 import { formatMoney } from '@/utils/format';
@@ -86,10 +86,13 @@ export function OrderSummary({ cart, summary, checkoutLink = false }: OrderSumma
         </div>
       </dl>
       {checkoutLink ? (
-        <CheckoutButton
-          checkoutUrl={cart.checkoutUrl}
-          className="focus-ring mt-6 flex h-12 items-center justify-center rounded-full bg-ink-950 text-sm font-semibold text-white transition hover:bg-moss-700 dark:bg-white dark:text-ink-950 dark:hover:bg-moss-100"
-        />
+        <>
+          <CheckoutButton
+            checkoutUrl={cart.checkoutUrl}
+            className="focus-ring mt-6 flex h-12 items-center justify-center rounded-full bg-ink-950 text-sm font-semibold text-white transition hover:bg-moss-700 dark:bg-white dark:text-ink-950 dark:hover:bg-moss-100"
+          />
+          <CheckoutPasswordHint className="mt-3 text-center text-xs text-ink-400" />
+        </>
       ) : null}
     </section>
   );

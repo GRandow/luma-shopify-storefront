@@ -11,7 +11,7 @@ A headless Shopify storefront built with React, TypeScript and Vite. Catalog, co
 
 🚀 **Live demo:** https://grandow.github.io/luma-shopify-storefront/
 
-The live demo runs against a Shopify **development store** with Shopify's hosted checkout in test mode: add something to the bag, go to "Secure checkout" and pay with the Bogus Gateway test card (card number `1`, any future expiry date, any CVV). Card `2` simulates a declined payment and `3` a gateway error.
+The live demo runs against a Shopify **development store** with Shopify's hosted checkout in test mode: add something to the bag, go to "Secure checkout" and pay with the Bogus Gateway test card (card number `1`, any future expiry date, any CVV). Card `2` simulates a declined payment and `3` a gateway error. Development stores keep a storefront password that Shopify's checkout asks for once per browser; the demo store's password is **`luma`**, and the app shows it next to the checkout button.
 
 Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shopify's public Storefront API sandbox, so it runs without a store or an access token. Pointing it at your own development store is a matter of three environment variables.
 
@@ -84,6 +84,7 @@ By default `VITE_SHOPIFY_STOREFRONT_API_URL` points at `https://mock.shop/api`. 
    VITE_SHOPIFY_STOREFRONT_API_URL=https://<shop>.myshopify.com/api/2026-07/graphql.json
    VITE_SHOPIFY_STOREFRONT_TOKEN=<public storefront access token>
    VITE_HOSTED_CHECKOUT=true   # "Secure checkout" now opens Shopify's checkout (cart.checkoutUrl)
+   VITE_STORE_PASSWORD_HINT=   # optional: your dev store's password, shown next to the checkout button
    ```
 
 The GitHub Pages workflow reads the same values from repository variables, so the live demo can switch stores without a code change.

@@ -7,7 +7,7 @@ import { ProductImage } from '@/components/ui/ProductImage';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCartDrawer } from '@/features/cart/cart-drawer-store';
 import { useCart } from '@/features/cart/cart-queries';
-import { CheckoutButton } from '@/features/cart/components/CheckoutButton';
+import { CheckoutButton, CheckoutPasswordHint } from '@/features/cart/components/CheckoutButton';
 import { QuantityStepper } from '@/features/cart/components/QuantityStepper';
 import { useCartLineActions } from '@/features/cart/use-cart-line-actions';
 import { getLineVariantTitle, type Cart } from '@/types/cart';
@@ -211,6 +211,7 @@ export function CartDrawer() {
                     Checkout
                   </CheckoutButton>
                 </div>
+                <CheckoutPasswordHint className="text-center text-xs text-ink-400" />
               </footer>
             ) : null}
           </motion.aside>
