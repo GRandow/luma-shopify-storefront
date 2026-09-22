@@ -48,7 +48,8 @@ export function CheckoutPasswordHint({ className }: { className?: string }) {
   return (
     <p className={className} role="note">
       Test store: if Shopify asks for a password, use{' '}
-      <span className="font-semibold text-ink-700 dark:text-ink-200">{STORE_PASSWORD_HINT}</span>.
+      <span className="font-semibold text-ink-700 dark:text-ink-200">{STORE_PASSWORD_HINT}</span>,
+      then press Checkout again.
     </p>
   );
 }

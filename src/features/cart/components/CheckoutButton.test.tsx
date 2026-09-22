@@ -49,7 +49,9 @@ describe('CheckoutButton', () => {
       'href',
       'https://shop.example/cart/c/abc',
     );
-    expect(screen.getByRole('note')).toHaveTextContent('if Shopify asks for a password, use luma');
+    expect(screen.getByRole('note')).toHaveTextContent(
+      'if Shopify asks for a password, use luma, then press Checkout again.',
+    );
   });
 
   it('renders no hint when no password is configured', async () => {
