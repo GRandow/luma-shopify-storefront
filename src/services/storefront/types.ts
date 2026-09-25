@@ -85,10 +85,16 @@ export interface CartLineNode {
   };
 }
 
+export interface CartAttributeNode {
+  key: string;
+  value: string | null;
+}
+
 export interface CartNode {
   id: string;
   checkoutUrl: string;
   totalQuantity: number;
+  attributes: CartAttributeNode[];
   discountCodes: Array<{ code: string; applicable: boolean }>;
   cost: {
     subtotalAmount: MoneyV2Node;
@@ -161,6 +167,16 @@ export interface CartDiscountCodesUpdateData {
 
 export interface CartBuyerIdentityUpdateData {
   cartBuyerIdentityUpdate: CartMutationPayload;
+}
+
+export interface CartAttributesUpdateData {
+  cartAttributesUpdate: CartMutationPayload;
+}
+
+/** `AttributeInput`: a key/value pair carried by the cart and copied onto the order. */
+export interface CartAttributeInput {
+  key: string;
+  value: string;
 }
 
 /** Subset of `CartBuyerIdentityInput` the app uses. */

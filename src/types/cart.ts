@@ -37,12 +37,19 @@ export interface CartDiscountCode {
   applicable: boolean;
 }
 
+/** A custom key/value pair on the cart; Shopify copies them onto the order as note attributes. */
+export interface CartAttribute {
+  key: string;
+  value: string;
+}
+
 export interface Cart {
   id: string;
   /** Shopify-hosted checkout for this cart. */
   checkoutUrl: string;
   totalQuantity: number;
   lines: CartLine[];
+  attributes: CartAttribute[];
   discountCodes: CartDiscountCode[];
   cost: {
     subtotal: Money;
@@ -67,6 +74,11 @@ const DEFAULT_VARIANT_TITLE = 'Default Title';
 /** Human-readable variant title, hiding Shopify's placeholder for option-less products. */
 export function getLineVariantTitle(line: Pick<CartLine, 'merchandise'>): string | null {
   return line.merchandise.title === DEFAULT_VARIANT_TITLE ? null : line.merchandise.title;
+}
+
+/** Value of a cart attribute, or `null` when it is not set. */
+export function getCartAttribute(cart: Pick<Cart, 'attributes'>, key: string): string | null {
+  return cart.attributes.find((attribute) => attribute.key === key)?.value ?? null;
 }
 
 /** Total discount applied to the cart (difference between subtotal and total, never negative). */

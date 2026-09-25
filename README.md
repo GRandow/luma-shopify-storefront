@@ -29,6 +29,7 @@ Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shop
 - Product comparison tray (up to three products: price, availability, brand, collection)
 - Persistent wishlist and recently viewed products (browser storage, survives reloads)
 - **Customer accounts** through the Customer Account API: OAuth 2.0 + PKCE sign-in with Shopify's passwordless login, profile, saved addresses and paginated order history; `cartBuyerIdentityUpdate` ties the cart to the customer so checkout is pre-authenticated
+- **Referral attribution** for direct-sales brands: `/?ref=CODE` links are remembered and written on the cart as an attribute (`cartCreate` / `cartAttributesUpdate`), which Shopify copies onto the order for back-office systems to read
 - Demo multi-step checkout (React Hook Form + Zod) that can be swapped for Shopify's hosted checkout with one flag
 - Dark mode, accessible dialogs and keyboard-friendly filters
 
@@ -113,6 +114,12 @@ By default `VITE_SHOPIFY_STOREFRONT_API_URL` points at `https://mock.shop/api`. 
    The store must use **new customer accounts** (Settings → Customer accounts), which is the default for development stores. Without these two variables the account area simply hides sign-in.
 
 The GitHub Pages workflow reads the same values from repository variables, so the live demo can switch stores without a code change.
+
+## Referral attribution (direct sales)
+
+Direct-sales and MLM brands need every order attributed to the distributor who made the sale. The storefront handles the buyer side of that: a link such as `https://grandow.github.io/luma-shopify-storefront/?ref=ANA123` stores the code in the browser (`features/referral`), the cart carries it as the `ref` attribute — set at `cartCreate` for new carts, or with `cartAttributesUpdate` when the code arrives after the cart exists — and Shopify copies cart attributes onto the order as note attributes. The shopper sees who the order is credited to in the bag and can remove it.
+
+The merchant side lives in a companion custom app, [luma-commission-bridge](https://github.com/GRandow/luma-commission-bridge) (work in progress): it receives `orders/paid` webhooks, resolves the distributor, calculates the commission and writes it back to the order through the Admin GraphQL API.
 
 ## Roadmap
 

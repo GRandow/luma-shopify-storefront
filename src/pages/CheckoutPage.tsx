@@ -275,7 +275,7 @@ function CheckoutForm({ cart, onComplete }: CheckoutFormProps) {
                   ).map(([value, label, detail]) => (
                     <label
                       key={value}
-                      className={`cursor-pointer rounded-2xl border p-4 ${selectedShippingMethod === value ? 'border-moss-600 bg-moss-50 dark:bg-moss-950' : ''}`}
+                      className={`cursor-pointer rounded-2xl border p-4 ${selectedShippingMethod === value ? 'border-moss-600 bg-moss-50 dark:bg-moss-900' : ''}`}
                     >
                       <input
                         type="radio"
@@ -293,7 +293,7 @@ function CheckoutForm({ cart, onComplete }: CheckoutFormProps) {
           ) : null}
           {step === 2 ? (
             <div className="mt-7">
-              <div className="mb-6 flex items-center gap-2 rounded-2xl bg-moss-50 p-4 text-sm text-moss-800 dark:bg-moss-950 dark:text-moss-200">
+              <div className="mb-6 flex items-center gap-2 rounded-2xl bg-moss-50 p-4 text-sm text-moss-800 dark:bg-moss-900 dark:text-moss-200">
                 <LockKeyhole className="size-4" />
                 Payment is simulated. Use any 16-digit number.
               </div>

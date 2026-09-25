@@ -11,6 +11,7 @@ import { OrderSummary } from '@/features/cart/components/OrderSummary';
 import { QuantityStepper } from '@/features/cart/components/QuantityStepper';
 import { useCart, useUpdateDiscountCodes } from '@/features/cart/cart-queries';
 import { useCartLineActions } from '@/features/cart/use-cart-line-actions';
+import { ReferralNotice } from '@/features/referral/components/ReferralNotice';
 import { isMockShop } from '@/services/storefront/client';
 import { getLineVariantTitle } from '@/types/cart';
 import { formatMoney } from '@/utils/format';
@@ -190,6 +191,7 @@ export default function CartPage() {
         </div>
         <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
           <OrderSummary cart={cart} checkoutLink />
+          <ReferralNotice />
           <div className="surface rounded-3xl border p-5">
             <h2 className="text-sm font-semibold">Discount code</h2>
             <form className="mt-3 flex gap-2" onSubmit={applyPromo}>

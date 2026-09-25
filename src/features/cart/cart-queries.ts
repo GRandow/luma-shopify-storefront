@@ -2,7 +2,9 @@ import { useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCartBuyerIdentity } from '@/features/auth/session';
 import { useCartSession } from '@/features/cart/cart-store';
+import { getReferralAttributes } from '@/features/referral/referral-store';
 import { cartService } from '@/services/cart-service';
+import type { CartAttributeInput } from '@/services/storefront/types';
 import type { Cart, CartLineInput, CartLineUpdateInput } from '@/types/cart';
 
 export const cartKeys = {
@@ -58,7 +60,8 @@ function useCartMutation<TVariables>(
 
 /**
  * Adds lines to the current cart, creating one when needed (or when the old
- * one expired). A cart created for a signed-in customer is tied to them.
+ * one expired). A cart created for a signed-in customer is tied to them, and
+ * a remembered referral code travels with it from the first line.
  */
 export function useAddToCart() {
   return useCartMutation<CartLineInput[]>(async (cartId, lines) => {
@@ -66,8 +69,18 @@ export function useAddToCart() {
       const cart = await cartService.addLines(cartId, lines);
       if (cart) return cart;
     }
-    return cartService.create(lines, await getCartBuyerIdentity());
+    return cartService.create(lines, {
+      buyerIdentity: await getCartBuyerIdentity(),
+      attributes: getReferralAttributes(),
+    });
   });
+}
+
+/** Replaces the cart's custom attributes (e.g. the referral code). */
+export function useUpdateCartAttributes() {
+  return useCartMutation<CartAttributeInput[]>((cartId, attributes) =>
+    requireCart(cartId, (id) => cartService.updateAttributes(id, attributes)),
+  );
 }
 
 async function requireCart<TResult>(

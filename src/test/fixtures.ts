@@ -122,6 +122,7 @@ export const rawCartFixture: CartNode = {
   id: 'gid://shopify/Cart/c1-test?key=abc',
   checkoutUrl: 'https://example.myshopify.com/cart/c/c1-test',
   totalQuantity: 3,
+  attributes: [],
   discountCodes: [{ code: 'WELCOME10', applicable: true }],
   cost: {
     subtotalAmount: money('190.0'),

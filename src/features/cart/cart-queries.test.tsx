@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/features/auth/auth-store';
 import { useAddToCart, useCart, useUpdateCartLines } from '@/features/cart/cart-queries';
 import { useCartSession } from '@/features/cart/cart-store';
+import { useReferralStore } from '@/features/referral/referral-store';
 import { storefrontRequest } from '@/services/storefront/client';
 import { rawCartFixture } from '@/test/fixtures';
 import { createTestQueryClient } from '@/test/render';
@@ -28,6 +29,7 @@ describe('cart queries', () => {
     vi.mocked(storefrontRequest).mockReset();
     useCartSession.setState({ cartId: null });
     useAuthStore.getState().clear();
+    useReferralStore.getState().clear();
   });
 
   it('creates a cart on the first add, stores its id and seeds the cache', async () => {
@@ -66,6 +68,23 @@ describe('cart queries', () => {
     expect(vi.mocked(storefrontRequest)).toHaveBeenCalledWith(
       expect.stringContaining('mutation CartCreate'),
       { lines: [line], buyerIdentity: { customerAccessToken: 'customer-token' } },
+    );
+  });
+
+  it('creates the cart with the referral code as an attribute', async () => {
+    useReferralStore.getState().setCode('ANA123');
+    vi.mocked(storefrontRequest).mockResolvedValueOnce({
+      cartCreate: { cart: rawCartFixture, userErrors: [] },
+    });
+    const { result } = renderHook(() => useAddToCart(), { wrapper: createWrapper() });
+
+    await act(async () => {
+      await result.current.mutateAsync([line]);
+    });
+
+    expect(vi.mocked(storefrontRequest)).toHaveBeenCalledWith(
+      expect.stringContaining('mutation CartCreate'),
+      { lines: [line], attributes: [{ key: 'ref', value: 'ANA123' }] },
     );
   });
 

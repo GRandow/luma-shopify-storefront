@@ -1,6 +1,7 @@
 import { toCart } from '@/services/storefront/adapters';
 import { storefrontRequest } from '@/services/storefront/client';
 import {
+  CART_ATTRIBUTES_UPDATE_MUTATION,
   CART_BUYER_IDENTITY_UPDATE_MUTATION,
   CART_CREATE_MUTATION,
   CART_DISCOUNT_CODES_UPDATE_MUTATION,
@@ -10,6 +11,8 @@ import {
   CART_QUERY,
 } from '@/services/storefront/queries';
 import type {
+  CartAttributeInput,
+  CartAttributesUpdateData,
   CartBuyerIdentityInput,
   CartBuyerIdentityUpdateData,
   CartCreateData,
@@ -21,6 +24,17 @@ import type {
   CartQueryData,
 } from '@/services/storefront/types';
 import type { Cart, CartLineInput, CartLineUpdateInput } from '@/types/cart';
+
+export interface CartCreateOptions {
+  buyerIdentity?: CartBuyerIdentityInput;
+  attributes?: CartAttributeInput[];
+}
+
+interface CartCreateVariables {
+  lines: CartLineInput[];
+  buyerIdentity?: CartBuyerIdentityInput;
+  attributes?: CartAttributeInput[];
+}
 
 /** Raised when Shopify rejects a cart change (e.g. quantity above stock). */
 export class CartUserError extends Error {
@@ -56,12 +70,20 @@ export const cartService = {
     return data.cart ? toCart(data.cart) : null;
   },
 
-  /** Creates a cart; pass the customer's buyer identity so it is theirs from the start. */
-  async create(lines: CartLineInput[] = [], buyerIdentity?: CartBuyerIdentityInput): Promise<Cart> {
-    const data = await storefrontRequest<
-      CartCreateData,
-      { lines: CartLineInput[]; buyerIdentity?: CartBuyerIdentityInput }
-    >(CART_CREATE_MUTATION, buyerIdentity ? { lines, buyerIdentity } : { lines });
+  /**
+   * Creates a cart. Pass the customer's buyer identity so it is theirs from
+   * the start, and any attributes (e.g. a referral code) that must reach the order.
+   */
+  async create(lines: CartLineInput[] = [], options: CartCreateOptions = {}): Promise<Cart> {
+    const variables: CartCreateVariables = { lines };
+    if (options.buyerIdentity) variables.buyerIdentity = options.buyerIdentity;
+    if (options.attributes && options.attributes.length > 0) {
+      variables.attributes = options.attributes;
+    }
+    const data = await storefrontRequest<CartCreateData, CartCreateVariables>(
+      CART_CREATE_MUTATION,
+      variables,
+    );
     const cart = unwrapCartPayload(data.cartCreate);
     if (!cart) throw new CartUserError(['The cart could not be created.']);
     return cart;
@@ -97,6 +119,18 @@ export const cartService = {
       { cartId: string; discountCodes: string[] }
     >(CART_DISCOUNT_CODES_UPDATE_MUTATION, { cartId, discountCodes });
     return unwrapCartPayload(data.cartDiscountCodesUpdate);
+  },
+
+  /**
+   * Replaces the cart's custom attributes. Shopify copies them onto the order
+   * as note attributes, which is how a referral code reaches back-office systems.
+   */
+  async updateAttributes(cartId: string, attributes: CartAttributeInput[]): Promise<Cart | null> {
+    const data = await storefrontRequest<
+      CartAttributesUpdateData,
+      { cartId: string; attributes: CartAttributeInput[] }
+    >(CART_ATTRIBUTES_UPDATE_MUTATION, { cartId, attributes });
+    return unwrapCartPayload(data.cartAttributesUpdate);
   },
 
   /**

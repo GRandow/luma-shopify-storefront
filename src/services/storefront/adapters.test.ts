@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { toCart, toProduct } from '@/services/storefront/adapters';
 import { rawCartFixture, rawProductFixture, rawSimpleProductFixture } from '@/test/fixtures';
-import { getLineVariantTitle } from '@/types/cart';
+import { getCartAttribute, getLineVariantTitle } from '@/types/cart';
 import {
   findVariant,
   getDefaultVariant,
@@ -72,5 +72,19 @@ describe('toCart', () => {
   it('hides the placeholder variant title of option-less products', () => {
     expect(getLineVariantTitle(cart.lines[0]!)).toBe('Moss / Small');
     expect(getLineVariantTitle(cart.lines[1]!)).toBeNull();
+  });
+
+  it('keeps custom attributes and drops the ones without a value', () => {
+    const withAttributes = toCart({
+      ...rawCartFixture,
+      attributes: [
+        { key: 'ref', value: 'ANA123' },
+        { key: 'gift_message', value: null },
+      ],
+    });
+
+    expect(withAttributes.attributes).toEqual([{ key: 'ref', value: 'ANA123' }]);
+    expect(getCartAttribute(withAttributes, 'ref')).toBe('ANA123');
+    expect(getCartAttribute(cart, 'ref')).toBeNull();
   });
 });

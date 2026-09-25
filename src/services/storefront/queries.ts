@@ -104,6 +104,10 @@ const CART_FRAGMENT = /* GraphQL */ `
     id
     checkoutUrl
     totalQuantity
+    attributes {
+      key
+      value
+    }
     discountCodes {
       code
       applicable
@@ -237,8 +241,12 @@ export const CART_QUERY = /* GraphQL */ `
 
 export const CART_CREATE_MUTATION = /* GraphQL */ `
   ${CART_FRAGMENTS}
-  mutation CartCreate($lines: [CartLineInput!], $buyerIdentity: CartBuyerIdentityInput) {
-    cartCreate(input: { lines: $lines, buyerIdentity: $buyerIdentity }) {
+  mutation CartCreate(
+    $lines: [CartLineInput!]
+    $buyerIdentity: CartBuyerIdentityInput
+    $attributes: [AttributeInput!]
+  ) {
+    cartCreate(input: { lines: $lines, buyerIdentity: $buyerIdentity, attributes: $attributes }) {
       cart {
         ...CartFields
       }
@@ -303,6 +311,22 @@ export const CART_DISCOUNT_CODES_UPDATE_MUTATION = /* GraphQL */ `
   ${CART_FRAGMENTS}
   mutation CartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!]) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
+      cart {
+        ...CartFields
+      }
+      userErrors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
+export const CART_ATTRIBUTES_UPDATE_MUTATION = /* GraphQL */ `
+  ${CART_FRAGMENTS}
+  mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
       cart {
         ...CartFields
       }

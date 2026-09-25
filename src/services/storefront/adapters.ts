@@ -122,6 +122,9 @@ export function toCart(node: CartNode): Cart {
     checkoutUrl: node.checkoutUrl,
     totalQuantity: node.totalQuantity,
     lines: node.lines.nodes.map(toCartLine),
+    attributes: node.attributes.flatMap((attribute) =>
+      attribute.value === null ? [] : [{ key: attribute.key, value: attribute.value }],
+    ),
     discountCodes: node.discountCodes.map((code) => ({
       code: code.code,
       applicable: code.applicable,
