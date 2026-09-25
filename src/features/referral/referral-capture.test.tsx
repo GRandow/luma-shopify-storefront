@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useUpdateCartAttributes } from '@/features/cart/cart-queries';
 import { useCartSession } from '@/features/cart/cart-store';
 import {
   captureReferralFromUrl,
@@ -122,5 +123,40 @@ describe('referral capture', () => {
       expect.stringContaining('mutation CartAttributesUpdate'),
       expect.anything(),
     );
+  });
+
+  it('writes a code again after the shopper removed it and entered it once more', async () => {
+    useReferralStore.getState().setCode('ANA123');
+    useCartSession.setState({ cartId: rawCartFixture.id });
+    const withCode = { ...rawCartFixture, attributes: [{ key: 'ref', value: 'ANA123' }] };
+    vi.mocked(storefrontRequest)
+      .mockResolvedValueOnce({ cart: rawCartFixture })
+      .mockResolvedValueOnce({ cartAttributesUpdate: { cart: withCode, userErrors: [] } })
+      .mockResolvedValueOnce({ cartAttributesUpdate: { cart: rawCartFixture, userErrors: [] } })
+      .mockResolvedValueOnce({ cartAttributesUpdate: { cart: withCode, userErrors: [] } });
+
+    const { result } = renderHook(
+      () => {
+        useReferralCartSync();
+        return useUpdateCartAttributes();
+      },
+      { wrapper: createWrapper() },
+    );
+    await waitFor(() => expect(vi.mocked(storefrontRequest)).toHaveBeenCalledTimes(2));
+
+    // What ReferralNotice's "Remove" does: forget the code and clear the attribute.
+    act(() => {
+      useReferralStore.getState().clear();
+      result.current.mutate([]);
+    });
+    await waitFor(() => expect(vi.mocked(storefrontRequest)).toHaveBeenCalledTimes(3));
+
+    // The same code typed into the form must reach the cart again.
+    act(() => useReferralStore.getState().setCode('ANA123'));
+    await waitFor(() => expect(vi.mocked(storefrontRequest)).toHaveBeenCalledTimes(4));
+    expect(vi.mocked(storefrontRequest).mock.calls[3]).toEqual([
+      expect.stringContaining('mutation CartAttributesUpdate'),
+      { cartId: rawCartFixture.id, attributes: [{ key: 'ref', value: 'ANA123' }] },
+    ]);
   });
 });

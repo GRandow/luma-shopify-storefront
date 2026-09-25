@@ -59,6 +59,11 @@ export function useReferralCartSync(): void {
   const { mutate, isPending } = useUpdateCartAttributes();
   const attempted = useRef<string | null>(null);
 
+  // A code the shopper removed and entered again deserves a fresh attempt.
+  useEffect(() => {
+    attempted.current = null;
+  }, [code]);
+
   useEffect(() => {
     if (!code || !cart || isPending) return;
     if (getCartAttribute(cart, REFERRAL_ATTRIBUTE_KEY) === code) return;

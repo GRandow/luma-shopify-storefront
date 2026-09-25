@@ -29,7 +29,7 @@ Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shop
 - Product comparison tray (up to three products: price, availability, brand, collection)
 - Persistent wishlist and recently viewed products (browser storage, survives reloads)
 - **Customer accounts** through the Customer Account API: OAuth 2.0 + PKCE sign-in with Shopify's passwordless login, profile, saved addresses and paginated order history; `cartBuyerIdentityUpdate` ties the cart to the customer so checkout is pre-authenticated
-- **Referral attribution** for direct-sales brands: `/?ref=CODE` links are remembered and written on the cart as an attribute (`cartCreate` / `cartAttributesUpdate`), which Shopify copies onto the order for back-office systems to read
+- **Referral attribution** for direct-sales brands: `/?ref=CODE` links are remembered (or the code is typed in the bag) and written on the cart as an attribute (`cartCreate` / `cartAttributesUpdate`), which Shopify copies onto the order for back-office systems to read
 - Demo multi-step checkout (React Hook Form + Zod) that can be swapped for Shopify's hosted checkout with one flag
 - Dark mode, accessible dialogs and keyboard-friendly filters
 
@@ -53,6 +53,8 @@ src/
 │  ├─ cart/               cart-queries.ts (useCart / useAddToCart / …) · cart-store.ts (persisted cart id) · CartDrawer
 │  ├─ auth/               auth-store.ts (persisted session) · session.ts (token refresh, sign-out) ·
 │  │                      customer-queries.ts (profile, orders) · AuthCallbackGate (finishes the OAuth redirect)
+│  ├─ referral/           referral-store.ts (persisted code) · referral-capture.ts (?ref= capture, cart sync) ·
+│  │                      ReferralNotice / ReferralCodeForm (who the order is credited to, code typed by hand)
 │  ├─ wishlist/ discovery/ theme/  Zustand stores
 │  └─ checkout/           form schema for the demo checkout
 ├─ types/                 Domain model consumed by the UI (product.ts, cart.ts, user.ts)
@@ -117,9 +119,9 @@ The GitHub Pages workflow reads the same values from repository variables, so th
 
 ## Referral attribution (direct sales)
 
-Direct-sales and MLM brands need every order attributed to the distributor who made the sale. The storefront handles the buyer side of that: a link such as `https://grandow.github.io/luma-shopify-storefront/?ref=ANA123` stores the code in the browser (`features/referral`), the cart carries it as the `ref` attribute — set at `cartCreate` for new carts, or with `cartAttributesUpdate` when the code arrives after the cart exists — and Shopify copies cart attributes onto the order as note attributes. The shopper sees who the order is credited to in the bag and can remove it.
+Direct-sales and MLM brands need every order attributed to the distributor who made the sale. The storefront handles the buyer side of that: a link such as `https://grandow.github.io/luma-shopify-storefront/?ref=ANA123` stores the code in the browser (`features/referral`), the cart carries it as the `ref` attribute — set at `cartCreate` for new carts, or with `cartAttributesUpdate` when the code arrives after the cart exists — and Shopify copies cart attributes onto the order as note attributes. The shopper sees who the order is credited to in the bag and can remove it, and a shopper who was given the code but not the link can type it in the bag (`ReferralCodeForm`). The storefront only checks the code's format; whether it belongs to an active distributor is decided by the back office, so nothing about distributors is exposed publicly.
 
-The merchant side lives in a companion custom app, [luma-commission-bridge](https://github.com/GRandow/luma-commission-bridge) (work in progress): it receives `orders/paid` webhooks, resolves the distributor, calculates the commission and writes it back to the order through the Admin GraphQL API.
+The merchant side lives in a companion custom app, [luma-commission-bridge](https://github.com/GRandow/luma-commission-bridge): it receives `orders/paid` webhooks, resolves the distributor (a metaobject with their own rate), calculates the commission, writes it back to the order through the Admin GraphQL API and hands it to a commission engine with retries.
 
 ## Roadmap
 
@@ -130,4 +132,4 @@ The merchant side lives in a companion custom app, [luma-commission-bridge](http
 
 ## About
 
-Built as part of my portfolio as a Shopify developer to show a real headless Shopify integration: Storefront API modelling, Cart API state management, a Customer Account API sign-in done by the book (OAuth 2.0 + PKCE), responsive CDN images and a componentised React front end.
+Built as part of my portfolio as a Shopify developer to show a real headless Shopify integration: Storefront API modelling, Cart API state management, a Customer Account API sign-in done by the book (OAuth 2.0 + PKCE), the buyer side of referral attribution for direct-sales brands, responsive CDN images and a componentised React front end.
