@@ -1,4 +1,4 @@
-import { useMemo, type FormEvent } from 'react';
+import { useMemo } from 'react';
 import {
   ArrowRight,
   Check,
@@ -8,9 +8,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/ui/ProductImage';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { SectionHeading } from '@/components/ui/SectionHeading';
@@ -55,12 +53,6 @@ export default function HomePage() {
     [products],
   );
   const popularCollections = collectionsQuery.data?.slice(0, 6) ?? [];
-
-  function subscribe(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    event.currentTarget.reset();
-    toast.success('Welcome to the Luma list. Check your inbox soon.');
-  }
 
   return (
     <>
@@ -179,7 +171,9 @@ export default function HomePage() {
         {productsQuery.isLoading ? <ProductGridSkeleton /> : <ProductGrid products={newArrivals} />}
       </section>
 
-      <section className="page-shell">
+      {/* The page ends with this banner or "Recently viewed": both keep the
+          section rhythm below them, and the footer adds its own margin. */}
+      <section className="page-shell pb-18">
         <div className="relative overflow-hidden rounded-[2rem] bg-ink-950 px-7 py-14 text-white sm:px-14 sm:py-18">
           <div className="relative z-10 max-w-xl">
             <p className="text-xs font-bold tracking-[0.18em] text-moss-300 uppercase">
@@ -205,7 +199,7 @@ export default function HomePage() {
       </section>
 
       {recentlyViewed.length > 0 ? (
-        <section className="page-shell py-18">
+        <section className="page-shell pb-18">
           <SectionHeading eyebrow="Pick up where you left off" title="Recently viewed" />
           <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-4 lg:grid-cols-6">
             {recentlyViewed.slice(0, 6).map((product) => (
@@ -214,38 +208,6 @@ export default function HomePage() {
           </div>
         </section>
       ) : null}
-
-      <section className="page-shell py-18">
-        <div className="rounded-[2rem] border border-black/5 bg-white px-6 py-14 text-center shadow-card sm:px-12 dark:border-white/8 dark:bg-ink-900">
-          <p className="text-xs font-bold tracking-[0.18em] text-moss-700 uppercase dark:text-moss-300">
-            Notes from Luma
-          </p>
-          <h2 className="font-display mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Useful things, thoughtfully delivered.
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-ink-muted">
-            New arrivals, design stories, and the occasional good offer. No inbox clutter.
-          </p>
-          <form
-            className="mx-auto mt-7 flex max-w-lg flex-col gap-2 sm:flex-row"
-            onSubmit={subscribe}
-          >
-            <label className="sr-only" htmlFor="newsletter-email">
-              Email address
-            </label>
-            <input
-              id="newsletter-email"
-              required
-              type="email"
-              placeholder="you@example.com"
-              className="focus-ring h-12 min-w-0 flex-1 rounded-full border border-ink-200 bg-transparent px-5 dark:border-white/15"
-            />
-            <Button type="submit" size="lg">
-              Subscribe
-            </Button>
-          </form>
-        </div>
-      </section>
     </>
   );
 }
