@@ -2,6 +2,8 @@ import { ArrowRight, Camera, Code2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Logo } from '@/components/brand/Logo';
+import { NewsletterSignup } from '@/features/marketing/components/NewsletterSignup';
+import { isKlaviyoEnabled } from '@/services/klaviyo/config';
 
 const footerLinks: Record<string, Array<readonly [string, string]>> = {
   Shop: [
@@ -28,6 +30,7 @@ export function Footer() {
             Considered objects for a calmer, more useful everyday. Curated with an eye for lasting
             design.
           </p>
+          <NewsletterSignup className="mt-8" />
           <div className="mt-6 flex gap-2">
             <a
               className="focus-ring rounded-full p-2.5 hover:bg-black/5 dark:hover:bg-white/8"
@@ -68,7 +71,13 @@ export function Footer() {
           <p>© {new Date().getFullYear()} Luma Goods. Built as a headless commerce reference.</p>
           <button
             className="focus-ring flex w-fit items-center gap-1 rounded hover:text-ink-950 dark:hover:text-white"
-            onClick={() => toast.info('Privacy preferences are already set to essential only.')}
+            onClick={() =>
+              toast.info(
+                isKlaviyoEnabled()
+                  ? 'Luma uses essential cookies, plus Klaviyo to remember newsletter subscribers and the products they view.'
+                  : 'Privacy preferences are already set to essential only.',
+              )
+            }
           >
             Privacy preferences <ArrowRight className="size-3" />
           </button>

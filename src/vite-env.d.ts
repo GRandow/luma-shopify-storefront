@@ -13,6 +13,14 @@ interface ImportMetaEnv {
   readonly VITE_SHOPIFY_SHOP_ID?: string;
   /** Client id of the public Customer Account API client (Headless channel). */
   readonly VITE_SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID?: string;
+  /** Klaviyo public API key (six-character site id). Enables onsite tracking and back-in-stock alerts. */
+  readonly VITE_KLAVIYO_PUBLIC_KEY?: string;
+  /** Id of the Klaviyo list the footer newsletter subscribes people to. */
+  readonly VITE_KLAVIYO_LIST_ID?: string;
+  /** End-to-end build only: base URL of the stand-in for Klaviyo's client API. */
+  readonly VITE_KLAVIYO_API_BASE?: string;
+  /** End-to-end build only: base URL of the stand-in for klaviyo.js. */
+  readonly VITE_KLAVIYO_SCRIPT_BASE?: string;
 }
 
 interface ImportMeta {

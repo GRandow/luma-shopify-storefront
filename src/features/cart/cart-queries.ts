@@ -4,6 +4,7 @@ import { getCartBuyerIdentity } from '@/features/auth/session';
 import { useCartSession } from '@/features/cart/cart-store';
 import { getReferralAttributes } from '@/features/referral/referral-store';
 import { cartService } from '@/services/cart-service';
+import { trackAddedToCart } from '@/services/klaviyo/tracking';
 import type { CartAttributeInput } from '@/services/storefront/types';
 import type { Cart, CartLineInput, CartLineUpdateInput } from '@/types/cart';
 
@@ -40,6 +41,7 @@ export function useCartCount(): number {
 
 function useCartMutation<TVariables>(
   mutate: (cartId: string | null, variables: TVariables) => Promise<Cart>,
+  afterSuccess?: (cart: Cart, variables: TVariables) => void,
 ) {
   const queryClient = useQueryClient();
   const cartId = useCartSession((state) => state.cartId);
@@ -47,13 +49,14 @@ function useCartMutation<TVariables>(
 
   return useMutation({
     mutationFn: (variables: TVariables) => mutate(cartId, variables),
-    onSuccess: (cart) => {
+    onSuccess: (cart, variables) => {
       // Seed the cache before switching ids so the new cart never refetches.
       queryClient.setQueryData(cartKeys.detail(cart.id), cart);
       if (cart.id !== cartId) {
         queryClient.removeQueries({ queryKey: cartKeys.detail(cartId) });
         setCartId(cart.id);
       }
+      afterSuccess?.(cart, variables);
     },
   });
 }
@@ -61,7 +64,8 @@ function useCartMutation<TVariables>(
 /**
  * Adds lines to the current cart, creating one when needed (or when the old
  * one expired). A cart created for a signed-in customer is tied to them, and
- * a remembered referral code travels with it from the first line.
+ * a remembered referral code travels with it from the first line. Every
+ * successful add is reported to Klaviyo ("Added to Cart") when it is set up.
  */
 export function useAddToCart() {
   return useCartMutation<CartLineInput[]>(async (cartId, lines) => {
@@ -73,7 +77,7 @@ export function useAddToCart() {
       buyerIdentity: await getCartBuyerIdentity(),
       attributes: getReferralAttributes(),
     });
-  });
+  }, trackAddedToCart);
 }
 
 /** Replaces the cart's custom attributes (e.g. the referral code). */

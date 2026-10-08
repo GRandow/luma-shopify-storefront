@@ -10,6 +10,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { useCartDrawer } from '@/features/cart/cart-drawer-store';
 import { useAddToCart } from '@/features/cart/cart-queries';
 import { useDiscoveryStore } from '@/features/discovery/discovery-store';
+import { BackInStockForm } from '@/features/marketing/components/BackInStockForm';
 import { ImageGallery } from '@/features/products/components/ImageGallery';
 import { ProductGrid } from '@/features/products/components/ProductGrid';
 import { ProductPrice } from '@/features/products/components/ProductPrice';
@@ -21,8 +22,11 @@ import {
 } from '@/features/products/product-queries';
 import { useVariantSelection } from '@/features/products/use-variant-selection';
 import { useWishlistStore } from '@/features/wishlist/wishlist-store';
+import { trackViewedProduct } from '@/services/klaviyo/tracking';
 import {
+  getDefaultVariant,
   getProductImage,
+  hasOnlyDefaultVariant,
   toProductSnapshot,
   type Product,
   type ProductVariant,
@@ -155,6 +159,11 @@ function ProductDetails({ product }: { product: Product }) {
     const collection = product.collections[0];
     if (collection) recordCollection(collection.handle);
   }, [product, recordCollection, recordView]);
+
+  // Once per product page, with the variant shown on arrival (Klaviyo: browse abandonment).
+  useEffect(() => {
+    trackViewedProduct(product, getDefaultVariant(product));
+  }, [product]);
 
   function selectOption(name: string, value: string) {
     select(name, value);
@@ -295,6 +304,14 @@ function ProductDetails({ product }: { product: Product }) {
               <Share2 className="size-5" />
             </Button>
           </div>
+          {selectedVariant && !selectedVariant.availableForSale ? (
+            <BackInStockForm
+              key={selectedVariant.id}
+              className="mt-4"
+              variantId={selectedVariant.id}
+              variantTitle={hasOnlyDefaultVariant(product) ? null : selectedVariant.title}
+            />
+          ) : null}
           <div className="mt-8 divide-y divide-black/5 rounded-2xl border border-black/5 px-5 dark:divide-white/8 dark:border-white/8">
             <div className="flex items-center gap-3 py-4 text-sm">
               <Truck className="size-5 text-moss-700 dark:text-moss-300" />

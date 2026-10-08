@@ -45,6 +45,8 @@ jobs:
           VITE_STORE_PASSWORD_HINT: ${{ vars.VITE_STORE_PASSWORD_HINT }}
           VITE_SHOPIFY_SHOP_ID: ${{ vars.VITE_SHOPIFY_SHOP_ID }}
           VITE_SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID: ${{ vars.VITE_SHOPIFY_CUSTOMER_ACCOUNT_CLIENT_ID }}
+          VITE_KLAVIYO_PUBLIC_KEY: ${{ vars.VITE_KLAVIYO_PUBLIC_KEY }}
+          VITE_KLAVIYO_LIST_ID: ${{ vars.VITE_KLAVIYO_LIST_ID }}
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v6
