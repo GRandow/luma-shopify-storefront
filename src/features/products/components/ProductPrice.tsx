@@ -20,12 +20,14 @@ export function ProductPrice({
   return (
     <div className="flex flex-wrap items-baseline gap-2">
       <span className={size === 'lg' ? 'text-3xl font-semibold' : 'text-sm font-semibold'}>
-        {from ? <span className="font-normal text-ink-500">From </span> : null}
+        {from ? <span className="font-normal text-ink-muted">From </span> : null}
         {formatMoney(price)}
       </span>
       {discount > 0 && compareAtPrice ? (
         <>
-          <span className={`${size === 'lg' ? 'text-base' : 'text-xs'} text-ink-400 line-through`}>
+          <span
+            className={`${size === 'lg' ? 'text-base' : 'text-xs'} text-ink-muted line-through`}
+          >
             {formatMoney(compareAtPrice)}
           </span>
           {size === 'lg' ? (

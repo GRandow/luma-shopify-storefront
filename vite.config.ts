@@ -18,6 +18,8 @@ export default defineConfig({
   preview: { port: 4173 },
 
   test: {
+    // Unit and component tests only; the Playwright specs in e2e/ run with `npm run test:e2e`.
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/test/setup.ts',

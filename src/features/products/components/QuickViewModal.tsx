@@ -53,9 +53,7 @@ function QuickViewContent({ product, onClose }: QuickViewContentProps) {
           {product.vendor}
         </p>
         <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight">{product.title}</h2>
-        <p className="mt-4 line-clamp-3 leading-7 text-ink-500 dark:text-ink-400">
-          {product.description}
-        </p>
+        <p className="mt-4 line-clamp-3 leading-7 text-ink-muted">{product.description}</p>
         <div className="mt-5">
           <ProductPrice
             price={selectedVariant?.price ?? product.price}

@@ -33,14 +33,30 @@ import { formatHandle } from '@/utils/format';
 const LOW_STOCK_THRESHOLD = 5;
 const UNTRACKED_STOCK_LIMIT = 99;
 
+// Mirrors the loaded page (breadcrumb, gallery with thumbnails, details column) so the
+// content does not shift when the product arrives.
 function ProductDetailsSkeleton() {
   return (
-    <div className="page-shell grid gap-10 py-14 lg:grid-cols-2" aria-busy="true">
-      <Skeleton className="aspect-square" />
-      <div className="space-y-5 py-6">
-        <Skeleton className="h-4 w-1/4" />
-        <Skeleton className="h-14 w-4/5" />
-        <Skeleton className="h-28 w-full" />
+    <div aria-busy="true">
+      <div className="page-shell py-5">
+        <Skeleton className="h-5 w-48 rounded-md" />
+      </div>
+      <div className="page-shell grid gap-10 pb-18 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
+        <div className="grid gap-3 sm:grid-cols-[5rem_1fr]">
+          <div className="order-2 flex gap-2 sm:order-1 sm:flex-col">
+            {Array.from({ length: 3 }, (_, index) => (
+              <Skeleton key={index} className="aspect-square w-18 sm:w-auto" />
+            ))}
+          </div>
+          <Skeleton className="order-1 aspect-square rounded-3xl sm:order-2" />
+        </div>
+        <div className="space-y-5 py-2">
+          <Skeleton className="h-4 w-1/4" />
+          <Skeleton className="h-14 w-4/5" />
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-12 w-full rounded-full" />
+        </div>
       </div>
     </div>
   );
@@ -168,7 +184,7 @@ function ProductDetails({ product }: { product: Product }) {
 
   return (
     <>
-      <div className="page-shell py-5 text-sm text-ink-400">
+      <div className="page-shell py-5 text-sm text-ink-muted">
         <Link className="hover:text-ink-900 dark:hover:text-white" to="/products">
           Shop
         </Link>
@@ -204,7 +220,7 @@ function ProductDetails({ product }: { product: Product }) {
             {product.title}
           </h1>
           {selectedVariant?.sku ? (
-            <p className="mt-3 text-sm text-ink-500">SKU {selectedVariant.sku}</p>
+            <p className="mt-3 text-sm text-ink-muted">SKU {selectedVariant.sku}</p>
           ) : null}
           <div className="mt-6">
             <ProductPrice
@@ -297,7 +313,7 @@ function ProductDetails({ product }: { product: Product }) {
             <dl className="mt-8 grid gap-4 text-sm sm:grid-cols-2">
               {product.collections.length > 0 ? (
                 <div>
-                  <dt className="text-ink-400">Collections</dt>
+                  <dt className="text-ink-muted">Collections</dt>
                   <dd className="mt-1 flex flex-wrap gap-1.5">
                     {product.collections.map((collection) => (
                       <Link
@@ -313,7 +329,7 @@ function ProductDetails({ product }: { product: Product }) {
               ) : null}
               {product.tags.length > 0 ? (
                 <div>
-                  <dt className="text-ink-400">Tags</dt>
+                  <dt className="text-ink-muted">Tags</dt>
                   <dd className="mt-1 flex flex-wrap gap-1.5">
                     {product.tags.map((tag) => (
                       <span

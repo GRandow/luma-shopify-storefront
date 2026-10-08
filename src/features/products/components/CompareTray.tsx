@@ -33,7 +33,7 @@ export function CompareTray() {
             <table className="w-full min-w-xl table-fixed text-left text-sm">
               <thead>
                 <tr>
-                  <th className="w-28 pb-4 text-ink-400">Feature</th>
+                  <th className="w-28 pb-4 text-ink-muted">Feature</th>
                   {items.map((item) => (
                     <th key={item.id} className="px-3 pb-4 font-semibold">
                       {item.title}
@@ -43,7 +43,7 @@ export function CompareTray() {
               </thead>
               <tbody className="divide-y divide-white/10">
                 <tr>
-                  <th className="py-3 text-ink-400">Price</th>
+                  <th className="py-3 text-ink-muted">Price</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
                       {item.priceVaries ? 'From ' : ''}
@@ -52,7 +52,7 @@ export function CompareTray() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="py-3 text-ink-400">Availability</th>
+                  <th className="py-3 text-ink-muted">Availability</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
                       {item.availableForSale ? 'In stock' : 'Sold out'}
@@ -60,7 +60,7 @@ export function CompareTray() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="py-3 text-ink-400">Brand</th>
+                  <th className="py-3 text-ink-muted">Brand</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
                       {item.vendor || '—'}
@@ -68,7 +68,7 @@ export function CompareTray() {
                   ))}
                 </tr>
                 <tr>
-                  <th className="py-3 text-ink-400">Collection</th>
+                  <th className="py-3 text-ink-muted">Collection</th>
                   {items.map((item) => (
                     <td key={item.id} className="px-3 py-3">
                       {item.collection ? formatHandle(item.collection) : '—'}

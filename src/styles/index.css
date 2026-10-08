@@ -3,8 +3,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
   --color-ink-50: #f7f7f5;
   --color-ink-100: #efefeb;
   --color-ink-200: #dad9d2;
@@ -16,6 +16,11 @@
   --color-ink-800: #31312d;
   --color-ink-900: #20201d;
   --color-ink-950: #11110f;
+  /* Secondary text (captions, labels, descriptions). Unlike the fixed steps above it
+     follows the theme (see .dark below), so it keeps 4.5:1 contrast (WCAG AA) on every
+     surface it sits on, from bg-ink-100 in the light theme to bg-ink-800 in the dark one.
+     No single grey can do that in both themes. */
+  --color-ink-muted: #6d6b61;
   --color-moss-50: #f3f7f1;
   --color-moss-100: #e4eee0;
   --color-moss-200: #c9dec2;
@@ -49,6 +54,10 @@
     font-family: var(--font-sans);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+  }
+
+  .dark {
+    --color-ink-muted: #9b9a8f;
   }
 
   .dark body {

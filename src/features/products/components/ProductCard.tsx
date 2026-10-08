@@ -120,7 +120,7 @@ export const ProductCard = memo(function ProductCard({
         </div>
       </div>
       <div className="pt-4">
-        <p className="truncate text-[0.68rem] font-bold tracking-wider text-ink-400 uppercase">
+        <p className="truncate text-[0.68rem] font-bold tracking-wider text-ink-muted uppercase">
           {product.vendor || (product.collection ? formatHandle(product.collection) : 'Luma')}
         </p>
         <h3 className="mt-1 truncate font-medium text-ink-900 dark:text-ink-100">

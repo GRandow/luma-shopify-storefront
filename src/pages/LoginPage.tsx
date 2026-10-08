@@ -41,7 +41,7 @@ export default function LoginPage() {
           <LockKeyhole className="size-5" />
         </div>
         <h1 className="font-display mt-6 text-3xl font-semibold tracking-tight">Your account</h1>
-        <p className="mt-2 text-sm leading-6 text-ink-500 dark:text-ink-400">
+        <p className="mt-2 text-sm leading-6 text-ink-muted">
           Sign in to see your orders, saved addresses and a checkout with your details filled in.
         </p>
         {accountsEnabled ? (

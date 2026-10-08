@@ -33,7 +33,7 @@ export class AppErrorBoundary extends Component<Props, State> {
           <div className="surface max-w-lg rounded-3xl border p-8 text-center shadow-soft">
             <AlertTriangle className="mx-auto size-9 text-coral" aria-hidden="true" />
             <h1 className="font-display mt-5 text-3xl font-semibold">Something went off course</h1>
-            <p className="mt-3 text-ink-500 dark:text-ink-400">
+            <p className="mt-3 text-ink-muted">
               The storefront hit an unexpected error. Your saved cart and wishlist are still intact.
             </p>
             <Button className="mt-6" onClick={this.reset}>

@@ -15,7 +15,7 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
         <Icon className="size-6 text-ink-600 dark:text-ink-300" aria-hidden="true" />
       </div>
       <h2 className="font-display text-2xl font-semibold tracking-tight">{title}</h2>
-      <p className="mt-2 max-w-md text-ink-500 dark:text-ink-400">{description}</p>
+      <p className="mt-2 max-w-md text-ink-muted">{description}</p>
       {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );

@@ -1,6 +1,12 @@
 node_modules
 dist
 coverage
+# End-to-end and Lighthouse output
+dist-e2e
+playwright-report
+test-results
+blob-report
+.lighthouseci
 .env
 .env.*
 !.env.example

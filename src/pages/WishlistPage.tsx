@@ -68,6 +68,7 @@ export default function WishlistPage() {
                 Add all to bag
               </Button>
             </div>
+            <h2 className="sr-only">Saved products</h2>
             <div className="grid grid-cols-2 gap-x-3 gap-y-9 sm:grid-cols-3 lg:grid-cols-4">
               {items.map((product) => (
                 <ProductCard key={product.id} product={product} />

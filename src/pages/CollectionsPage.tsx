@@ -71,7 +71,7 @@ export default function CollectionsPage() {
                       {collection.title}
                     </h2>
                     {collection.description ? (
-                      <p className="mt-2 line-clamp-3 max-w-md text-sm leading-6 text-ink-500 dark:text-ink-400">
+                      <p className="mt-2 line-clamp-3 max-w-md text-sm leading-6 text-ink-muted">
                         {collection.description}
                       </p>
                     ) : null}

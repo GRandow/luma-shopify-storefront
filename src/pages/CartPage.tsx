@@ -116,7 +116,7 @@ export default function CartPage() {
       <div className="page-shell grid gap-10 py-12 lg:grid-cols-[1fr_23rem]">
         <div>
           <Link
-            className="focus-ring mb-6 inline-flex items-center gap-2 rounded text-sm font-semibold text-ink-500 hover:text-ink-950 dark:hover:text-white"
+            className="focus-ring mb-6 inline-flex items-center gap-2 rounded text-sm font-semibold text-ink-muted hover:text-ink-950 dark:hover:text-white"
             to="/products"
           >
             <ArrowLeft className="size-4" />
@@ -143,7 +143,7 @@ export default function CartPage() {
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-xs font-bold tracking-wider text-ink-400 uppercase">
+                        <p className="text-xs font-bold tracking-wider text-ink-muted uppercase">
                           {merchandise.product.vendor}
                         </p>
                         <h2 className="mt-1 font-semibold">
@@ -152,13 +152,11 @@ export default function CartPage() {
                           </Link>
                         </h2>
                         {variantTitle ? (
-                          <p className="mt-0.5 text-sm text-ink-500 dark:text-ink-400">
-                            {variantTitle}
-                          </p>
+                          <p className="mt-0.5 text-sm text-ink-muted">{variantTitle}</p>
                         ) : null}
                       </div>
                       <button
-                        className="focus-ring rounded p-1 text-ink-400 hover:text-red-600"
+                        className="focus-ring rounded p-1 text-ink-muted hover:text-red-600"
                         disabled={busy}
                         onClick={() => remove(line)}
                         aria-label={`Remove ${merchandise.product.title}`}
@@ -222,7 +220,7 @@ export default function CartPage() {
                   <li key={entry.code} className="flex items-center justify-between gap-2">
                     <span>
                       <strong>{entry.code}</strong>{' '}
-                      <span className="text-ink-400">
+                      <span className="text-ink-muted">
                         {entry.applicable ? 'applied' : 'not applicable'}
                       </span>
                     </span>
@@ -237,7 +235,7 @@ export default function CartPage() {
               </ul>
             ) : null}
             {isMockShop() ? (
-              <p className="mt-3 text-xs leading-5 text-ink-400">
+              <p className="mt-3 text-xs leading-5 text-ink-muted">
                 The mock.shop sandbox accepts codes but never applies a discount. Point the app at a
                 development store to test real promotions.
               </p>

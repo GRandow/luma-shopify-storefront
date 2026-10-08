@@ -24,19 +24,40 @@ export default function ProductsPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [mobileFilters, setMobileFilters] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
-  const initialQuery = searchParams.get('q') ?? '';
-  const initialCollection = searchParams.get('collection') ?? '';
+  const urlQuery = searchParams.get('q') ?? '';
+  const urlCollection = searchParams.get('collection') ?? '';
+  const urlSort = (searchParams.get('sort') as ProductSort | null) ?? DEFAULT_FILTERS.sort;
   const [filters, setFilters] = useState<ProductFiltersState>({
     ...DEFAULT_FILTERS,
-    query: initialQuery,
-    collection: initialCollection,
-    sort: (searchParams.get('sort') as ProductSort | null) ?? DEFAULT_FILTERS.sort,
+    query: urlQuery,
+    collection: urlCollection,
+    sort: urlSort,
   });
+
+  // The URL also changes from outside while this page stays mounted: a search from
+  // the header, a collection link, "New arrivals" in the menu. Adopt those values;
+  // otherwise the effect below wrote the old filters straight back over them and the
+  // new search was silently ignored (found by the E2E suite).
+  const urlFilters = `${urlQuery}\n${urlCollection}\n${urlSort}`;
+  const [adoptedUrlFilters, setAdoptedUrlFilters] = useState(urlFilters);
+  if (urlFilters !== adoptedUrlFilters) {
+    setAdoptedUrlFilters(urlFilters);
+    if (
+      urlQuery !== filters.query ||
+      urlCollection !== filters.collection ||
+      urlSort !== filters.sort
+    ) {
+      setFilters({ ...filters, query: urlQuery, collection: urlCollection, sort: urlSort });
+      setPage(1);
+      setVisibleCount(PAGE_SIZE);
+    }
+  }
+
   // Search goes through Shopify's `search` query; a collection loads through
   // `collection(handle:)`. Everything else (price, stock, sort) is refined locally.
   const productsQuery = useProducts({
-    search: initialQuery || undefined,
-    collection: initialQuery ? undefined : initialCollection || undefined,
+    search: urlQuery || undefined,
+    collection: urlQuery ? undefined : urlCollection || undefined,
   });
   const collectionsQuery = useCollections();
   const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
@@ -102,9 +123,10 @@ export default function ProductsPage() {
       />
       <div className="page-shell py-10 sm:py-14">
         <div className="mb-7 flex items-center justify-between gap-3">
-          <p className="text-sm text-ink-500 dark:text-ink-400">
+          {/* The heading of the results list (cards are h3), so the outline does not skip a level. */}
+          <h2 className="text-sm text-ink-muted">
             <strong className="text-ink-900 dark:text-white">{filtered.length}</strong> products
-          </p>
+          </h2>
           <div className="flex items-center gap-2">
             <Button
               className="lg:hidden"

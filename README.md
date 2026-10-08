@@ -5,6 +5,7 @@
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite)
 ![Shopify Storefront API](https://img.shields.io/badge/Shopify-Storefront%20API-96BF48?logo=shopify&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss)
+![Playwright](https://img.shields.io/badge/tested%20with-Playwright-2EAD33?logo=playwright)
 ![CI](https://github.com/GRandow/luma-shopify-storefront/actions/workflows/ci.yml/badge.svg)
 
 A headless Shopify storefront built with React, TypeScript and Vite. Catalog, collections, search and the cart come from the **Shopify Storefront API (GraphQL)**, customer sign-in, addresses and order history from the **Customer Account API**; the UI is a custom React front end with wishlist, product comparison, quick view and a demo checkout.
@@ -31,11 +32,11 @@ Out of the box (no `.env`) the app talks to [mock.shop](https://mock.shop), Shop
 - **Customer accounts** through the Customer Account API: OAuth 2.0 + PKCE sign-in with Shopify's passwordless login, profile, saved addresses and paginated order history; `cartBuyerIdentityUpdate` ties the cart to the customer so checkout is pre-authenticated
 - **Referral attribution** for direct-sales brands: `/?ref=CODE` links are remembered (or the code is typed in the bag) and written on the cart as an attribute (`cartCreate` / `cartAttributesUpdate`), which Shopify copies onto the order for back-office systems to read
 - Demo multi-step checkout (React Hook Form + Zod) that can be swapped for Shopify's hosted checkout with one flag
-- Dark mode, accessible dialogs and keyboard-friendly filters
+- Dark mode, accessible dialogs and keyboard-friendly filters, with WCAG 2.1 AA colour contrast in both themes
 
 ## Tech stack
 
-React 19 · TypeScript · Vite · React Router · TanStack Query · Zustand · Tailwind CSS · React Hook Form · Zod · Vitest + Testing Library
+React 19 · TypeScript · Vite · React Router · TanStack Query · Zustand · Tailwind CSS · React Hook Form · Zod · Vitest + Testing Library · Playwright · axe-core · Lighthouse CI
 
 ## Architecture
 
@@ -79,9 +80,55 @@ npm install
 npm run dev
 ```
 
-Other scripts: `npm run build`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run format`.
+Other scripts: `npm run build`, `npm test`, `npm run lint`, `npm run typecheck`, `npm run format`, and `npm run test:e2e` / `npm run lighthouse` (see [Quality](#quality)).
 
-Every push and pull request runs lint, formatting, typecheck, tests and the production build through GitHub Actions (`.github/workflows/ci.yml`); `main` is then deployed to GitHub Pages (`deploy.yml`).
+Every push and pull request runs lint, formatting, typecheck, unit tests, the production build, the end-to-end suite and the Lighthouse budgets through GitHub Actions (`.github/workflows/ci.yml`); `main` is then deployed to GitHub Pages (`deploy.yml`).
+
+## Quality
+
+| Layer                    | Tooling                                     | What it checks                                                      |
+| ------------------------ | ------------------------------------------- | ------------------------------------------------------------------- |
+| Unit and component tests | Vitest + Testing Library                    | adapters, stores, the OAuth/PKCE flow, components                   |
+| End-to-end tests         | Playwright, on desktop Chrome and a Pixel 7 | real shopper journeys, in the production build                      |
+| Accessibility            | axe-core, inside the Playwright run         | WCAG 2.1 A/AA on the main screens, in the light and the dark theme  |
+| Lighthouse CI            | `@lhci/cli`                                 | budgets for performance, accessibility, best practices, SEO and CLS |
+
+### End-to-end tests against a fake Storefront API
+
+The end-to-end suite does not call mock.shop or a real store. `e2e/fake-storefront/` is a small in-memory implementation of the Storefront API operations the app uses (catalog, search, recommendations and the Cart API, user errors included, such as an expired cart or a sold-out line). A Vite plugin mounts it on the `vite preview` server that serves the production build, and `vite.e2e.config.ts` pins every `VITE_*` variable, so the build under test is the same on every machine whatever its `.env` says.
+
+That makes the run deterministic (a fixed catalog of 13 products with known stock and prices), fast and independent of a third-party sandbox, and failures can be injected: `page.route` answers chosen operations with a 503. Elements are found by role, label and visible text, the way a shopper or a screen reader finds them, and requests are checked by GraphQL operation name and variables.
+
+Journeys covered, on desktop and mobile:
+
+- browse, pick a colour, adjust the bag and go through the three-step checkout (with validation) to the confirmation
+- sold-out combinations cannot be bought, low stock is flagged
+- the bag page changes quantities and removes lines
+- referral links (`/?ref=`, also inside a hash route) reach the cart as an attribute; the code can be removed or typed by hand
+- search, including a new search started from the catalog itself
+- the catalog API is down (error state, then a retry), an unknown product, an expired cart replaced without the shopper noticing
+
+What the suite caught, now fixed:
+
+- After a validation error in checkout, the next click on "Continue" was lost: the error disappeared on blur, the button moved up under the cursor and the click landed on nothing.
+- A search typed in the header while the catalog was open was overwritten by the previous search.
+- Grey secondary text failed WCAG AA contrast in both themes (axe found it on every page). It now uses one theme-aware colour, `ink-muted`, with at least 4.5:1 on every surface it sits on.
+- Lighthouse flagged a layout shift on product pages (the footer flashed into view while the page loaded; CLS went from 0.20 to about 0.02), a skipped heading level in the catalog and a render-blocking Google Fonts stylesheet; the fonts are now bundled with the app (Fontsource).
+
+On CI a failing test is retried once and keeps a trace (DOM snapshots, network, console) in the Playwright report uploaded with the run.
+
+### Lighthouse budgets
+
+Lighthouse CI audits the home page, the catalog and a product page, three runs each, in mobile emulation on a simulated slow 4G connection, against the same build as the end-to-end suite. The job fails if accessibility, best practices or SEO score below 100, performance below 80 (the medians are 86 to 91) or CLS goes above 0.1. Links to the reports are printed in the job log.
+
+### Running the checks locally
+
+```bash
+npx playwright install chromium   # once
+npm run test:e2e                  # builds with the fake API, then runs Playwright on desktop and mobile
+npm run test:e2e:ui               # the same in Playwright's UI mode
+npm run lighthouse                # Lighthouse CI with the same budgets; reports land in .lighthouseci/reports
+```
 
 ## Connecting a Shopify store
 
@@ -129,7 +176,8 @@ The merchant side lives in a companion custom app, [luma-commission-bridge](http
 - Cursor-based pagination and server-side filters (`products(query:)`, `filters` on collections)
 - Predictive search in the header (`predictiveSearch`)
 - Market/currency selection (`@inContext`)
+- Load Framer Motion lazily (`LazyMotion`): it is a large share of the main bundle, and the next step to lift mobile Lighthouse performance above 90
 
 ## About
 
-Built as part of my portfolio as a Shopify developer to show a real headless Shopify integration: Storefront API modelling, Cart API state management, a Customer Account API sign-in done by the book (OAuth 2.0 + PKCE), the buyer side of referral attribution for direct-sales brands, responsive CDN images and a componentised React front end.
+Built as part of my portfolio as a Shopify developer to show a real headless Shopify integration: Storefront API modelling, Cart API state management, a Customer Account API sign-in done by the book (OAuth 2.0 + PKCE), the buyer side of referral attribution for direct-sales brands, responsive CDN images and a componentised React front end, tested end to end with Playwright, axe-core and Lighthouse CI.

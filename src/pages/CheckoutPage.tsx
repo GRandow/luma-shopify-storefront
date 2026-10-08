@@ -113,8 +113,19 @@ function CheckoutForm({ cart, onComplete }: CheckoutFormProps) {
         'shipping.shippingMethod',
       ],
     ];
-    const valid = await form.trigger(fields[step] ?? []);
-    if (valid) setStep((current) => Math.min(current + 1, 2));
+    const stepFields = fields[step] ?? [];
+    const valid = await form.trigger(stepFields);
+    if (valid) {
+      setStep((current) => Math.min(current + 1, 2));
+      return;
+    }
+    // A failed attempt counts as touching the step's fields, so from now on their
+    // errors update while the shopper types. Otherwise the last error only cleared
+    // on blur, i.e. on the press of "Continue" itself: the message vanished, the
+    // button moved up under the cursor and the click was lost (found by the E2E suite).
+    for (const name of stepFields) {
+      form.setValue(name, form.getValues(name), { shouldTouch: true });
+    }
   }
 
   async function placeOrder(values: CheckoutFormValues) {
@@ -284,7 +295,7 @@ function CheckoutForm({ cart, onComplete }: CheckoutFormProps) {
                         {...form.register('shipping.shippingMethod')}
                       />
                       <strong className="text-sm">{label}</strong>
-                      <p className="mt-1 pl-5 text-xs text-ink-400">{detail}</p>
+                      <p className="mt-1 pl-5 text-xs text-ink-muted">{detail}</p>
                     </label>
                   ))}
                 </div>
@@ -368,12 +379,12 @@ function CheckoutProgress({ step }: { step: number }) {
         <div key={item.label} className="flex items-center">
           <div className="flex flex-col items-center gap-2">
             <span
-              className={`grid size-9 place-items-center rounded-full text-sm font-semibold ${index <= step ? 'bg-ink-950 text-white dark:bg-white dark:text-ink-950' : 'bg-ink-100 text-ink-400 dark:bg-ink-800'}`}
+              className={`grid size-9 place-items-center rounded-full text-sm font-semibold ${index <= step ? 'bg-ink-950 text-white dark:bg-white dark:text-ink-950' : 'bg-ink-100 text-ink-muted dark:bg-ink-800'}`}
             >
               {index < step ? <Check className="size-4" /> : index + 1}
             </span>
             <span
-              className={`hidden text-xs font-semibold sm:block ${index <= step ? '' : 'text-ink-400'}`}
+              className={`hidden text-xs font-semibold sm:block ${index <= step ? '' : 'text-ink-muted'}`}
             >
               {item.label}
             </span>
@@ -413,23 +424,23 @@ function OrderConfirmation({ order }: { order: Order }) {
         >
           Thank you{order.shippingAddress ? `, ${order.shippingAddress.firstName}` : ''}.
         </h1>
-        <p className="mt-3 text-ink-500 dark:text-ink-400">
+        <p className="mt-3 text-ink-muted">
           Order <strong className="text-ink-900 dark:text-white">{order.name}</strong> is confirmed.
           We are getting it ready now.
         </p>
         <div className="surface mt-8 rounded-3xl border p-6 text-left">
           <div className="flex justify-between">
-            <span className="text-ink-500 dark:text-ink-400">Order total</span>
+            <span className="text-ink-muted">Order total</span>
             <strong>{formatMoney(order.total)}</strong>
           </div>
           <div className="mt-4 flex justify-between">
-            <span className="text-ink-500 dark:text-ink-400">Status</span>
+            <span className="text-ink-muted">Status</span>
             <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-800">
               {order.fulfillmentStatus}
             </span>
           </div>
         </div>
-        <p className="mt-4 text-xs text-ink-400">
+        <p className="mt-4 text-xs text-ink-muted">
           This is the demo checkout: nothing was charged and the order is not kept.
         </p>
         <div className="mt-7 flex justify-center gap-3">

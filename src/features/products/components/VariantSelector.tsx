@@ -27,9 +27,7 @@ export function VariantSelector({
         <fieldset key={option.name}>
           <legend className="text-sm font-semibold">
             {option.name}
-            <span className="ml-2 font-normal text-ink-500 dark:text-ink-400">
-              {selectedOptions[option.name]}
-            </span>
+            <span className="ml-2 font-normal text-ink-muted">{selectedOptions[option.name]}</span>
           </legend>
           <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label={option.name}>
             {option.values.map((value) => {

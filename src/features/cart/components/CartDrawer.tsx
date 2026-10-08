@@ -49,13 +49,11 @@ function CartDrawerLines({ cart, onNavigate }: { cart: Cart; onNavigate: () => v
                     </Link>
                   </p>
                   {variantTitle ? (
-                    <p className="truncate text-xs text-ink-500 dark:text-ink-400">
-                      {variantTitle}
-                    </p>
+                    <p className="truncate text-xs text-ink-muted">{variantTitle}</p>
                   ) : null}
                 </div>
                 <button
-                  className="focus-ring shrink-0 rounded p-1 text-ink-400 hover:text-red-600"
+                  className="focus-ring shrink-0 rounded p-1 text-ink-muted hover:text-red-600"
                   disabled={busy}
                   onClick={() => remove(line)}
                   aria-label={`Remove ${merchandise.product.title}`}
@@ -171,7 +169,7 @@ export function CartDrawer() {
                     />
                   </div>
                   <p className="font-display text-xl font-semibold">Your bag is empty</p>
-                  <p className="mt-2 max-w-xs text-sm text-ink-500 dark:text-ink-400">
+                  <p className="mt-2 max-w-xs text-sm text-ink-muted">
                     Add something worth keeping and it will show up here.
                   </p>
                   <Link
@@ -189,10 +187,10 @@ export function CartDrawer() {
             {cart ? (
               <footer className="space-y-4 border-t border-black/5 px-6 py-5 dark:border-white/8">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-ink-500 dark:text-ink-400">Subtotal</span>
+                  <span className="text-sm text-ink-muted">Subtotal</span>
                   <span className="text-lg font-semibold">{formatMoney(cart.cost.subtotal)}</span>
                 </div>
-                <p className="text-xs text-ink-400">
+                <p className="text-xs text-ink-muted">
                   Shipping, taxes and discount codes are settled at checkout.
                 </p>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -211,7 +209,7 @@ export function CartDrawer() {
                     Checkout
                   </CheckoutButton>
                 </div>
-                <CheckoutPasswordHint className="text-center text-xs text-ink-400" />
+                <CheckoutPasswordHint className="text-center text-xs text-ink-muted" />
               </footer>
             ) : null}
           </motion.aside>

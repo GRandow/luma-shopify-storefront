@@ -24,7 +24,7 @@ export function Footer() {
       <div className="page-shell grid gap-12 py-14 lg:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <Logo />
-          <p className="mt-5 max-w-sm leading-7 text-ink-500 dark:text-ink-400">
+          <p className="mt-5 max-w-sm leading-7 text-ink-muted">
             Considered objects for a calmer, more useful everyday. Curated with an eye for lasting
             design.
           </p>
@@ -52,7 +52,7 @@ export function Footer() {
               {links.map(([label, path]) => (
                 <li key={label}>
                   <Link
-                    className="focus-ring rounded text-sm text-ink-500 hover:text-ink-950 dark:text-ink-400 dark:hover:text-white"
+                    className="focus-ring rounded text-sm text-ink-muted hover:text-ink-950 dark:hover:text-white"
                     to={path}
                   >
                     {label}
@@ -64,7 +64,7 @@ export function Footer() {
         ))}
       </div>
       <div className="border-t border-black/5 py-5 dark:border-white/8">
-        <div className="page-shell flex flex-col justify-between gap-3 text-xs text-ink-500 sm:flex-row dark:text-ink-400">
+        <div className="page-shell flex flex-col justify-between gap-3 text-xs text-ink-muted sm:flex-row">
           <p>© {new Date().getFullYear()} Luma Goods. Built as a headless commerce reference.</p>
           <button
             className="focus-ring flex w-fit items-center gap-1 rounded hover:text-ink-950 dark:hover:text-white"

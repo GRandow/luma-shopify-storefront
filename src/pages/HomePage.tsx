@@ -111,7 +111,7 @@ export default function HomePage() {
             </span>
             <div className="min-w-0">
               <p className="text-base font-semibold lg:text-lg">{title}</p>
-              <p className="text-sm text-ink-500 dark:text-ink-400">{detail}</p>
+              <p className="text-sm text-ink-muted">{detail}</p>
             </div>
           </div>
         ))}
@@ -162,7 +162,7 @@ export default function HomePage() {
                     />
                   </div>
                   <p className="mt-3 truncate text-sm font-semibold">{collection.title}</p>
-                  <p className="mt-0.5 text-xs text-ink-400">Collection {index + 1}</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">Collection {index + 1}</p>
                 </Link>
               );
             })}
@@ -223,7 +223,7 @@ export default function HomePage() {
           <h2 className="font-display mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
             Useful things, thoughtfully delivered.
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-ink-500 dark:text-ink-400">
+          <p className="mx-auto mt-3 max-w-xl text-ink-muted">
             New arrivals, design stories, and the occasional good offer. No inbox clutter.
           </p>
           <form

@@ -126,14 +126,14 @@ export default function ProfilePage() {
               </span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{customer.displayName}</p>
-                <p className="truncate text-xs text-ink-400">{customer.email ?? 'No email'}</p>
+                <p className="truncate text-xs text-ink-muted">{customer.email ?? 'No email'}</p>
               </div>
             </div>
             <nav className="mt-3 space-y-1" aria-label="Profile sections">
               {tabs.map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
-                  className={`focus-ring flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${tab === id ? 'bg-ink-100 text-ink-950 dark:bg-white/10 dark:text-white' : 'text-ink-500 hover:bg-ink-50 dark:hover:bg-white/5'}`}
+                  className={`focus-ring flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${tab === id ? 'bg-ink-100 text-ink-950 dark:bg-white/10 dark:text-white' : 'text-ink-muted hover:bg-ink-50 dark:hover:bg-white/5'}`}
                   onClick={() => setTab(id)}
                   aria-current={tab === id ? 'page' : undefined}
                 >
@@ -164,7 +164,7 @@ export default function ProfilePage() {
                   >
                     <Icon className="size-5 text-moss-700 dark:text-moss-300" />
                     <strong className="mt-5 block text-3xl">{value}</strong>
-                    <span className="text-sm text-ink-400">{label}</span>
+                    <span className="text-sm text-ink-muted">{label}</span>
                   </button>
                 ))}
               </div>
@@ -172,23 +172,23 @@ export default function ProfilePage() {
                 <h3 className="font-display text-xl font-semibold">Personal information</h3>
                 <dl className="mt-5 grid gap-5 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-ink-400">Name</dt>
+                    <dt className="text-ink-muted">Name</dt>
                     <dd className="mt-1 font-medium">{customer.displayName}</dd>
                   </div>
                   <div>
-                    <dt className="text-ink-400">Email</dt>
+                    <dt className="text-ink-muted">Email</dt>
                     <dd className="mt-1 font-medium">{customer.email ?? 'Not provided'}</dd>
                   </div>
                   <div>
-                    <dt className="text-ink-400">Phone</dt>
+                    <dt className="text-ink-muted">Phone</dt>
                     <dd className="mt-1 font-medium">{customer.phone ?? 'Not provided'}</dd>
                   </div>
                   <div>
-                    <dt className="text-ink-400">Customer ID</dt>
+                    <dt className="text-ink-muted">Customer ID</dt>
                     <dd className="mt-1 font-medium">#{customerNumber(customer.id)}</dd>
                   </div>
                   <div className="sm:col-span-2">
-                    <dt className="text-ink-400">Default address</dt>
+                    <dt className="text-ink-muted">Default address</dt>
                     <dd className="mt-1 font-medium">
                       {customer.defaultAddress
                         ? [
@@ -343,7 +343,7 @@ function OrderCard({ order }: { order: Order }) {
       <div className="flex flex-wrap justify-between gap-4">
         <div>
           <p className="font-semibold">Order {order.name}</p>
-          <p className="mt-1 text-xs text-ink-400">
+          <p className="mt-1 text-xs text-ink-muted">
             Placed {formatDate(order.processedAt)} · {itemCount}{' '}
             {itemCount === 1 ? 'item' : 'items'}
           </p>
@@ -369,7 +369,7 @@ function OrderCard({ order }: { order: Order }) {
           ))}
         </div>
         {order.items.length > 5 ? (
-          <span className="text-xs text-ink-400">+{order.items.length - 5} more</span>
+          <span className="text-xs text-ink-muted">+{order.items.length - 5} more</span>
         ) : null}
       </div>
       <ul className="mt-4 space-y-1 text-sm text-ink-600 dark:text-ink-300">
@@ -378,10 +378,10 @@ function OrderCard({ order }: { order: Order }) {
             <span className="truncate">
               {item.title}
               {item.variantTitle ? (
-                <span className="text-ink-400"> · {item.variantTitle}</span>
+                <span className="text-ink-muted"> · {item.variantTitle}</span>
               ) : null}
             </span>
-            <span className="shrink-0 text-ink-400">× {item.quantity}</span>
+            <span className="shrink-0 text-ink-muted">× {item.quantity}</span>
           </li>
         ))}
       </ul>
@@ -407,7 +407,7 @@ function AddressCard({ address }: { address: Address }) {
         <h3 className="font-semibold">{address.label}</h3>
         {address.isDefault ? <Badge tone="success">Default</Badge> : null}
       </div>
-      <address className="mt-4 text-sm leading-6 text-ink-500 not-italic dark:text-ink-400">
+      <address className="mt-4 text-sm leading-6 text-ink-muted not-italic">
         {address.firstName} {address.lastName}
         <br />
         {address.address}

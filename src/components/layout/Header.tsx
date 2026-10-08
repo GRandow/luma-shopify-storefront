@@ -187,7 +187,7 @@ export function Header() {
             aria-label="Search products"
           >
             <form onSubmit={submitSearch} className="flex items-center gap-3">
-              <Search className="size-5 text-ink-400" aria-hidden="true" />
+              <Search className="size-5 text-ink-muted" aria-hidden="true" />
               <label htmlFor="global-search" className="sr-only">
                 Search products
               </label>
@@ -196,7 +196,7 @@ export function Header() {
                 autoFocus
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                className="min-w-0 flex-1 bg-transparent py-2 text-lg outline-none placeholder:text-ink-400"
+                className="min-w-0 flex-1 bg-transparent py-2 text-lg outline-none placeholder:text-ink-muted"
                 placeholder="Search products, collections, brands..."
               />
               <Button size="sm" variant="ghost" onClick={() => setSearchOpen(false)}>
@@ -205,7 +205,7 @@ export function Header() {
             </form>
             {recentSearches.length > 0 ? (
               <div className="mt-5 border-t pt-4">
-                <p className="mb-3 text-xs font-bold tracking-wider text-ink-400 uppercase">
+                <p className="mb-3 text-xs font-bold tracking-wider text-ink-muted uppercase">
                   Recent
                 </p>
                 <div className="flex flex-wrap gap-2">

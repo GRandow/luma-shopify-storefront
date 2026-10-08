@@ -35,7 +35,7 @@ export function ReferralCodeForm({ className }: { className?: string }) {
   return (
     <div className={cn('surface rounded-3xl border p-5', className)}>
       <h2 className="text-sm font-semibold">Distributor code</h2>
-      <p className="mt-1 text-xs text-ink-500 dark:text-ink-400">
+      <p className="mt-1 text-xs text-ink-muted">
         Shopping with a distributor? Enter their code and this order is credited to them.
       </p>
       <form className="mt-3 flex gap-2" onSubmit={apply} noValidate>

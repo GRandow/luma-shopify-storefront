@@ -45,7 +45,7 @@ export function OrderSummary({ cart, summary, checkoutLink = false }: OrderSumma
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{line.merchandise.product.title}</p>
                 {variantTitle ? (
-                  <p className="truncate text-xs text-ink-400">{variantTitle}</p>
+                  <p className="truncate text-xs text-ink-muted">{variantTitle}</p>
                 ) : null}
               </div>
               <p className="text-sm font-semibold">{formatMoney(line.cost.total)}</p>
@@ -55,7 +55,7 @@ export function OrderSummary({ cart, summary, checkoutLink = false }: OrderSumma
       </div>
       <dl className="mt-6 space-y-3 border-t border-black/5 pt-5 text-sm dark:border-white/8">
         <div className="flex justify-between">
-          <dt className="text-ink-500 dark:text-ink-400">Subtotal</dt>
+          <dt className="text-ink-muted">Subtotal</dt>
           <dd>{formatMoney(cart.cost.subtotal)}</dd>
         </div>
         {discount.amount > 0 ? (
@@ -65,7 +65,7 @@ export function OrderSummary({ cart, summary, checkoutLink = false }: OrderSumma
           </div>
         ) : null}
         <div className="flex justify-between">
-          <dt className="text-ink-500 dark:text-ink-400">Shipping</dt>
+          <dt className="text-ink-muted">Shipping</dt>
           <dd>
             {summary
               ? summary.shipping.amount === 0
@@ -75,7 +75,7 @@ export function OrderSummary({ cart, summary, checkoutLink = false }: OrderSumma
           </dd>
         </div>
         <div className="flex justify-between">
-          <dt className="text-ink-500 dark:text-ink-400">Tax</dt>
+          <dt className="text-ink-muted">Tax</dt>
           <dd>{cart.cost.tax ? formatMoney(cart.cost.tax) : 'Calculated at checkout'}</dd>
         </div>
         <div className="flex justify-between border-t border-black/5 pt-4 text-base font-semibold dark:border-white/8">
@@ -91,7 +91,7 @@ export function OrderSummary({ cart, summary, checkoutLink = false }: OrderSumma
             checkoutUrl={cart.checkoutUrl}
             className="focus-ring mt-6 flex h-12 items-center justify-center rounded-full bg-ink-950 text-sm font-semibold text-white transition hover:bg-moss-700 dark:bg-white dark:text-ink-950 dark:hover:bg-moss-100"
           />
-          <CheckoutPasswordHint className="mt-3 text-center text-xs text-ink-400" />
+          <CheckoutPasswordHint className="mt-3 text-center text-xs text-ink-muted" />
         </>
       ) : null}
     </section>

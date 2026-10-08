@@ -11,7 +11,7 @@ export default function NotFoundPage() {
         <h1 className="font-display -mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
           This page is out of stock.
         </h1>
-        <p className="mx-auto mt-4 max-w-md text-ink-500 dark:text-ink-400">
+        <p className="mx-auto mt-4 max-w-md text-ink-muted">
           The link may be old, or the page has moved somewhere more useful.
         </p>
         <div className="mt-7 flex justify-center gap-3">

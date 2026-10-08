@@ -39,7 +39,7 @@ export function ProductFilters({
         </label>
         <div className="relative mt-2">
           <Search
-            className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-400"
+            className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-muted"
             aria-hidden="true"
           />
           <input
@@ -122,7 +122,7 @@ export function ProductFilters({
         </select>
       </div>
       <button
-        className="focus-ring flex items-center gap-2 rounded-lg text-sm font-semibold text-ink-500 hover:text-ink-950 dark:hover:text-white"
+        className="focus-ring flex items-center gap-2 rounded-lg text-sm font-semibold text-ink-muted hover:text-ink-950 dark:hover:text-white"
         onClick={onReset}
       >
         <RotateCcw className="size-4" aria-hidden="true" /> Reset filters
